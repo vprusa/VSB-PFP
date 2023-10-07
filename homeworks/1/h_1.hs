@@ -30,6 +30,10 @@ puzzle2 = ["AC DE",
 -- findCharCoordinates char =
 --   [(row, col) | (row, rowString) <- zip [0..] puzzle2, (col, gridChar) <- zip [0..] rowString, gridChar == char]
 
-findCharCoordinates :: Char -> [(Int, Int)]
-findCharCoordinates char =
-  [(row, col) | (row, rowString) <- zip [0..] puzzle2, (col, gridChar) <- zip [0..] rowString, gridChar == char]
+-- findCharCoordinates :: Char -> [String] -> [(Int, Int)]
+-- findCharCoordinates char grid =
+--   [(row, col) | (row, rowString) <- zip [0..] puzzle2, (col, gridChar) <- zip [0..] rowString, gridChar == char]
+
+findCharCoordinates :: Char -> [String] -> [(Int, Int)]
+findCharCoordinates char grid =
+  [(row, col) | (row, rowString) <- zip [0..] grid, (col, gridChar) <- zip [0..] rowString, gridChar == char]
