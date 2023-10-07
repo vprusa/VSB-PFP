@@ -158,6 +158,8 @@ pp x = putStr (concat (map (++"\n") x))
 
 
 
+
+
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
@@ -171,12 +173,18 @@ instance CharacterContainer [String] where
   findCharCoordinates char grid =
     [(row, col) | (row, rowString) <- zip [0..] grid, (col, gridChar) <- zip [0..] rowString, gridChar == char]
   
-  switchCoordinates char1 char2 grid =
-    case (findCharCoordinates char1 grid, findCharCoordinates char2 grid) of
-      ([coord1], [coord2]) ->
-        let (row1, col1) = coord1
-            (row2, col2) = coord2
-            newRow1 = f either char1 or char2 is not found or multiple occurrences are found, return the original grid
+  switchCoordinates char1 char2 grid
+    | char2 == ' ' =  -- Check if char2 is an empty space
+        case (findCharCoordinates char1 grid, findCharCoordinates char2 grid) of
+          ([coord1], [coord2]) ->
+            let (row1, col1) = coord1
+                (row2, col2) = coord2
+                newRow1 = replaceAtIndex col1 (grid !! row1) char2
+                newRow2 = replaceAtIndex col2 (grid !! row2) char1
+                newGrid = replaceAtIndex row1 grid newRow1
+            in replaceAtIndex row2 newGrid newRow2
+          _ -> grid  -- If either char1 or char2 is not found or multiple occurrences are found, return the original grid
+    | otherwise = grid  -- If char2 is not an empty space, do not perform the switch
 
 -- Helper function to replace an element at a specific index in a list
 replaceAtIndex :: Int -> [a] -> a -> [a]
@@ -192,8 +200,8 @@ puzzle2 = ["AC DE",
 
 main :: IO ()
 main = do
-  let char1 = ' '
-      char2 = 'H'
+  let char1 = 'H'
+      char2 = ' '  -- Change char2 to an empty space
       coordinates1 = findCharCoordinates char1 puzzle2
       coordinates2 = findCharCoordinates char2 puzzle2
   putStrLn ("Coordinates of '" ++ [char1] ++ "': " ++ show coordinates1)
@@ -203,10 +211,3 @@ main = do
   putStrLn "Modified Grid:"
   mapM_ putStrLn newGrid
 
-  
-
-replaceAtIndex col1 (grid !! row1) char2
-            newRow2 = replaceAtIndex col2 (grid !! row2) char1
-            newGrid = replaceAtIndex row1 grid newRow1
-        in replaceAtIndex row2 newGrid newRow2
-      _ -> grid  -- I
