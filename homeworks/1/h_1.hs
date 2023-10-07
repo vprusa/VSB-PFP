@@ -176,11 +176,7 @@ instance CharacterContainer [String] where
       ([coord1], [coord2]) ->
         let (row1, col1) = coord1
             (row2, col2) = coord2
-            newRow1 = replaceAtIndex col1 (grid !! row1) char2
-            newRow2 = replaceAtIndex col2 (grid !! row2) char1
-            newGrid = replaceAtIndex row1 grid newRow1
-        in replaceAtIndex row2 newGrid newRow2
-      _ -> grid  -- If either char1 or char2 is not found or multiple occurrences are found, return the original grid
+            newRow1 = f either char1 or char2 is not found or multiple occurrences are found, return the original grid
 
 -- Helper function to replace an element at a specific index in a list
 replaceAtIndex :: Int -> [a] -> a -> [a]
@@ -209,3 +205,8 @@ main = do
 
   
 
+replaceAtIndex col1 (grid !! row1) char2
+            newRow2 = replaceAtIndex col2 (grid !! row2) char1
+            newGrid = replaceAtIndex row1 grid newRow1
+        in replaceAtIndex row2 newGrid newRow2
+      _ -> grid  -- I
