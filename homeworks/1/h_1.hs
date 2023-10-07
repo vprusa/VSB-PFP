@@ -206,3 +206,6 @@ main = do
   let newGrid = switchCoordinates char1 char2 puzzle2
   putStrLn "Modified Grid:"
   mapM_ putStrLn newGrid
+
+  
+
