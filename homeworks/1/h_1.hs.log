@@ -1,0 +1,15 @@
+ghci> main
+Origin Grid:
+AC DE
+FBHIJ
+KGLNO
+PQMRS
+UVWXT
+Modified Grid 5 - sequence: CBGLMRST
+
+ABCDE
+FGHIJ
+KLMNO
+PQRST
+UVWX 
+
