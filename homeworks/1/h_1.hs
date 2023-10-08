@@ -4,8 +4,6 @@ module Main
   where
 import Control.Monad.RWS (First(getFirst))
 
--- main=putStrLn "Hello, World!"
-
 type Result = [String]
 pp :: Result -> IO ()
 pp x = putStr (concat (map (++"\n") x))
@@ -72,7 +70,6 @@ replaceAtIndex index xs newElement =
 (|>) :: a -> (a -> b) -> b
 (|>) x f = f x
 
-
 -- Define a type class for structures that can contain characters
 class CharacterContainer a where
   findCharCoordinates :: Char -> a -> [(Int, Int)]
@@ -83,43 +80,39 @@ instance CharacterContainer [String] where
   findCharCoordinates char grid =
     [(row, col) | (row, rowString) <- zip [0..] grid, (col, gridChar) <- zip [0..] rowString, gridChar == char]
 
+-- Function to find first char in string
 getFirstItem :: [a] -> a
 getFirstItem (x:_) = x
 getFirstItem [] = error "Empty list"
 
+-- Function to substring except first char
 substringExceptFirst :: String -> String
 substringExceptFirst str = drop 1 str
 
+-- Function to check if string is empty
 isEmpty :: String -> Bool
 isEmpty str = null str
 
+-- returns first char of string
 getFirstCharacter :: String -> Char
 getFirstCharacter (x:_) = x
 getFirstCharacter [] = error "Empty sequence"
 
--- Function to apply switchCoordinates for each character in a sequence
+-- apply switchCoordinates for each character in a sequence
 applySwitchSequence :: String -> [String] -> [String]
--- applySwitchSequence sequence grid =
-  -- foldl (\grid' char -> if char /= ' ' then switchCharacters grid (getFirstItem (findCharCoordinates ' ' grid')) (getFirstItem(findCharCoordinates char grid')) else grid') grid sequence
 applySwitchSequence sequence grid =
   let 
     newGrid = if isEmpty sequence then
       grid  
-      -- else applySwitchSequence (substringExceptFirst sequence) grid
       else applySwitchSequence (substringExceptFirst sequence) (switchCharacters grid (getFirstItem (findCharCoordinates ' ' grid)) (getFirstItem(findCharCoordinates (getFirstCharacter sequence) grid)))
-    -- putStrLn "New Grid:"
     in 
-      -- mapM_ putStrLn newGrid
        newGrid
-      -- switchCharacters grid (getFirstItem (findCharCoordinates ' ' grid')) (getFirstItem(findCharCoordinates char grid')) else grid'
-  -- foldl (\grid' char -> if char /= ' ' then switchCharacters grid (getFirstItem (findCharCoordinates ' ' grid')) (getFirstItem(findCharCoordinates char grid')) else grid') grid sequence
-
 
 main :: IO ()
 main = do
   putStrLn "Origin Grid:"
   mapM_ putStrLn puzzle2
-  let newGrid = switchCharacters puzzle2 (0, 0) (1, 1)  -- Example: Switch (0,0) and (1,1)
+  -- let newGrid = switchCharacters puzzle2 (0, 0) (1, 1)
   -- putStrLn "Modified Grid 1:"
   -- mapM_ putStrLn newGrid
   -- let newGrid2 = switchCharacters puzzle2 (0, 2) (1, 2)
