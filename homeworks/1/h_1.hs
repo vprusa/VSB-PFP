@@ -87,11 +87,32 @@ getFirstItem :: [a] -> a
 getFirstItem (x:_) = x
 getFirstItem [] = error "Empty list"
 
+substringExceptFirst :: String -> String
+substringExceptFirst str = drop 1 str
+
+isEmpty :: String -> Bool
+isEmpty str = null str
+
+getFirstCharacter :: String -> Char
+getFirstCharacter (x:_) = x
+getFirstCharacter [] = error "Empty sequence"
+
 -- Function to apply switchCoordinates for each character in a sequence
 applySwitchSequence :: String -> [String] -> [String]
+-- applySwitchSequence sequence grid =
+  -- foldl (\grid' char -> if char /= ' ' then switchCharacters grid (getFirstItem (findCharCoordinates ' ' grid')) (getFirstItem(findCharCoordinates char grid')) else grid') grid sequence
 applySwitchSequence sequence grid =
-  -- foldl (\grid' char -> if char /= ' ' then switchCoordinates char ' ' grid' else grid') grid sequence
-  foldl (\grid' char -> if char /= ' ' then switchCharacters grid (getFirstItem (findCharCoordinates ' ' grid')) (getFirstItem(findCharCoordinates char grid')) else grid') grid sequence
+  let 
+    newGrid = if isEmpty sequence then
+      grid  
+      -- else applySwitchSequence (substringExceptFirst sequence) grid
+      else applySwitchSequence (substringExceptFirst sequence) (switchCharacters grid (getFirstItem (findCharCoordinates ' ' grid)) (getFirstItem(findCharCoordinates (getFirstCharacter sequence) grid)))
+    -- putStrLn "New Grid:"
+    in 
+      -- mapM_ putStrLn newGrid
+       newGrid
+      -- switchCharacters grid (getFirstItem (findCharCoordinates ' ' grid')) (getFirstItem(findCharCoordinates char grid')) else grid'
+  -- foldl (\grid' char -> if char /= ' ' then switchCharacters grid (getFirstItem (findCharCoordinates ' ' grid')) (getFirstItem(findCharCoordinates char grid')) else grid') grid sequence
 
 
 main :: IO ()
@@ -115,10 +136,11 @@ main = do
   -- putStrLn "Modified Grid 4:"
   -- mapM_ putStrLn newGrid4
 
-  -- let inputSequence2 = "CBGLMRST"
-  let inputSequence2 = "CBG"
+  let inputSequence2 = "CBGLMRST"
+  -- let inputSequence2 = "CBG"
   let newGrid5 = applySwitchSequence inputSequence2 puzzle2
       -- newGrid2 = applySwitchSequence inputSequence2 puzzle2
-  putStrLn "Modified Grid 5:"
+  putStr "Modified Grid 5 - sequence: "
   putStrLn inputSequence2
+  putStrLn ""
   mapM_ putStrLn newGrid5
