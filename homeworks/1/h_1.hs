@@ -1,9 +1,15 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Redundant if" #-}
+
+-- above are recommended options for VSCode
+
+-- define main
 module Main
   where
+-- import suggested libraries
 import Control.Monad.RWS (First(getFirst))
 
+-- result structure a print, not used
 type Result = [String]
 pp :: Result -> IO ()
 pp x = putStr (concat (map (++"\n") x))
