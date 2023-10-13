@@ -7,6 +7,7 @@ import Data.Binary.Get (isEmpty)
 
 -- https://hackage.haskell.org/package/base-4.19.0.0/docs/Data-List.html#g:15 - partition - split by predicate
 import Data.List (partition)
+import Data.Type.Coercion (trans)
 
 type Result = [String]
 pp :: Result -> IO ()
@@ -63,10 +64,49 @@ isDeterministic (states, alphabet, transitions, startState, acceptingStates) =
     isTransitionDeterministic group = ((length group) == 1)
 
 
+-- Second function runs automaton for given string and establishes, if given input string is accepted by the given automaton. It should work for both deterministic and non-deterministic finite automatons.
+
+-- canContinue:: Automaton -> String -> Int -> Bool
+-- canContinue (states, alphabet, transitions, startState, acceptingStates) (transIndex) (input) = 
+--   let
+--     trans = transitions[transIndex]
+--     in 
+
+-- Function that returns string except first character
+substringExceptFirst :: String -> String
+substringExceptFirst str = drop 1 str
+
+-- Function that returns True if value is in aray
+isValueInArray :: Eq a => a -> [a] -> Bool
+isValueInArray value array = elem value array
+
+-- nextTransition:: Transition -> Char -> Transition
+-- nextTransition (from, char, to) char = 
+--   let
+--     in 
+
+getState:: Transition -> Int
+getState (from, char, to) = to
 
 isAccepting:: Automaton -> String -> Bool
 isAccepting (states, alphabet, transitions, startState, acceptingStates) (input) = 
-  do 1 == 1
+  let 
+    nextInput = drop 1 input
+    -- nextStartState = startState -- TODO
+    curChar = if length input /= 0 then input !! 0 else '$'
+    -- currentTransition = transitions !! startState
+    -- take frist possible transition
+    currentStateTransitio = filter (\(from, curChar, _) -> from == startState) transitions !! 0
+    nextStartState = getState currentStateTransitio
+    
+    -- isDone = length nextInput == 0 -- && length nextState == 0
+    isDone = length nextInput == 0 && isValueInArray startState acceptingStates
+    result = if isDone then isDone else isAccepting (states, alphabet, transitions, nextStartState, acceptingStates) (nextInput)
+    in 
+      result
+  
+
+
 
 main :: IO ()
 main = do
@@ -77,5 +117,8 @@ main = do
 
   putStrLn ("Is #1 deterministic?: " ++ (if isDeterministic ex1 then "True" else "False"))
   putStrLn ("Is #2 deterministic?: " ++ (if isDeterministic ex2 then "True" else "False"))
+
+  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "aab" then "True" else "False"))
+  putStrLn ("Is #2 accepting?: " ++ (if isAccepting ex2 "aaa" then "True" else "False"))
 
 
