@@ -24,6 +24,8 @@ ex1 = (3, "ab", [(0,'a',1), (0,'b',0), (1,'a',1), (1,'b',2), (2,'a',1), (2,'b',0
 ex2 :: Automaton
 ex2 = (3, "ab", [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)], 0, [2])
 
+ex3 :: Automaton
+ex3 = (3, "ab", [(0,'a',1), (0,'b',0), (1,'a',1), (1,'b',2), (2,'a',1), (2,'b',0)], 0, [2])
 
 -- Function to print automata to standard output
 printAutomaton :: Automaton -> IO ()
@@ -115,6 +117,10 @@ isAccepting (states, alphabet, transitions, startState, acceptingStates) (input)
     result
 
 
+--     Finally, create a function that takes a non-deterministic automaton and produces it's deterministic equivalent (the output can be very different based on used methodology).
+
+convert:: Automaton -> Automaton
+convert (states, alphabet, transitions, startState, acceptingStates) = (states, alphabet, transitions, startState, acceptingStates)
 
 main :: IO ()
 main = do
@@ -123,12 +129,17 @@ main = do
   putStrLn "\nAutomaton 2: "
   printAutomaton ex2
 
+  putStrLn "\n1.1.:"
+
   putStrLn ("Is #1 deterministic?: " ++ (if isDeterministic ex1 then "True" else "False")) -- True
   putStrLn ("Is #2 deterministic?: " ++ (if isDeterministic ex2 then "True" else "False")) -- False
+
+  putStrLn "\n1.2.a) Required inputs:"
 
   putStrLn ("Is #1 accepting?: aab " ++ (if isAccepting ex1 "aab" then "True" else "False")) -- True
   putStrLn ("Is #2 accepting?: aaa " ++ (if isAccepting ex2 "aaa" then "True" else "False")) -- False
 
+  putStrLn "\n1.2.b) Optional inputs:"
   putStrLn ("Is #1 accepting?: ab " ++ (if isAccepting ex1 "ab" then "True" else "False")) -- True
   putStrLn ("Is #1 accepting?: a " ++ (if isAccepting ex1 "a" then "True" else "False")) -- False
   putStrLn ("Is #1 accepting?: abb " ++ (if isAccepting ex1 "abb" then "True" else "False")) -- False
@@ -142,3 +153,13 @@ main = do
   putStrLn ("Is #2 accepting?: b " ++ (if isAccepting ex2 "b" then "True" else "False")) -- False
   putStrLn ("Is #2 accepting?: ab " ++ (if isAccepting ex2 "ab" then "True" else "False")) -- True - hack because I head of transitinos is (0,a,1), if the transition would be random then this would (sometimes) fail
   putStrLn ("Is #2 accepting?: bab " ++ (if isAccepting ex2 "ab" then "True" else "False")) -- True - hack because I head of transitinos is (0,a,1), if the transition would be random then this would (sometimes) fail
+
+  putStrLn "\nConver non-deterministic to deterministic:"
+
+  putStrLn "\nConverting Automaton 3:"
+  printAutomaton ex3
+  putStrLn "\nConverting Automaton 3 - deterministic:"
+  printAutomaton (convert ex3)
+  putStrLn "done"
+  
+
