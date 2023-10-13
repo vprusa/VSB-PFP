@@ -96,18 +96,19 @@ isAccepting:: Automaton -> String -> Bool
 isAccepting (states, alphabet, transitions, startState, acceptingStates) (input) =
   let
     nextInput = drop 1 input
-    curChar = input !! 0
+    curChar = head input
 
     -- get next possible transitions as list
     currentStateTransitions = filterTransition transitions startState curChar
 
     canContinue =
       not (null input) &&
+      not (null currentStateTransitions) &&
       not (null currentStateTransitions)
-    isFinished = length nextInput == 0 && elem startState acceptingStates
+    isFinished = (null nextInput && null input) && elem startState acceptingStates
     nextState = getNextState (head currentStateTransitions)
     result
-      | isFinished = True
+      | isFinished && True = True
       | canContinue = isAccepting (states, alphabet, transitions, nextState, acceptingStates) nextInput
       | otherwise = False
  in
@@ -122,14 +123,22 @@ main = do
   putStrLn "\nAutomaton 2: "
   printAutomaton ex2
 
-  putStrLn ("Is #1 deterministic?: " ++ (if isDeterministic ex1 then "True" else "False"))
-  putStrLn ("Is #2 deterministic?: " ++ (if isDeterministic ex2 then "True" else "False"))
+  putStrLn ("Is #1 deterministic?: " ++ (if isDeterministic ex1 then "True" else "False")) -- True
+  putStrLn ("Is #2 deterministic?: " ++ (if isDeterministic ex2 then "True" else "False")) -- False
 
-  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "aab" then "True" else "False"))
-  putStrLn ("Is #2 accepting?: " ++ (if isAccepting ex2 "aaa" then "True" else "False"))
+  putStrLn ("Is #1 accepting?: aab " ++ (if isAccepting ex1 "aab" then "True" else "False")) -- True
+  putStrLn ("Is #2 accepting?: aaa " ++ (if isAccepting ex2 "aaa" then "True" else "False")) -- False
 
-  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "ab" then "True" else "False"))
-  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "a" then "True" else "False"))
-  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "abb" then "True" else "False"))
-  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "b" then "True" else "False"))
-  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "abbbbb" then "True" else "False"))
+  putStrLn ("Is #1 accepting?: ab " ++ (if isAccepting ex1 "ab" then "True" else "False")) -- True
+  putStrLn ("Is #1 accepting?: a " ++ (if isAccepting ex1 "a" then "True" else "False")) -- False
+  putStrLn ("Is #1 accepting?: abb " ++ (if isAccepting ex1 "abb" then "True" else "False")) -- False
+  putStrLn ("Is #1 accepting?: aabb " ++ (if isAccepting ex1 "aabb" then "True" else "False")) -- False
+  putStrLn ("Is #1 accepting?: aabb " ++ (if isAccepting ex1 "aabb" then "True" else "False")) -- False
+  putStrLn ("Is #1 accepting?: abab " ++ (if isAccepting ex1 "abab" then "True" else "False")) -- False
+  putStrLn ("Is #1 accepting?: aba " ++ (if isAccepting ex1 "aba" then "True" else "False")) -- False
+  putStrLn ("Is #1 accepting?: b " ++ (if isAccepting ex1 "b" then "True" else "False")) -- False
+  putStrLn ("Is #1 accepting?: abbbbb " ++ (if isAccepting ex1 "abbbbb" then "True" else "False")) -- False
+
+  putStrLn ("Is #2 accepting?: b " ++ (if isAccepting ex2 "b" then "True" else "False")) -- False
+  putStrLn ("Is #2 accepting?: ab " ++ (if isAccepting ex2 "ab" then "True" else "False")) -- True - hack because I head of transitinos is (0,a,1), if the transition would be random then this would (sometimes) fail
+  putStrLn ("Is #2 accepting?: bab " ++ (if isAccepting ex2 "ab" then "True" else "False")) -- True - hack because I head of transitinos is (0,a,1), if the transition would be random then this would (sometimes) fail
