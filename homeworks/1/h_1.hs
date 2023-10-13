@@ -18,10 +18,10 @@ type Transition = (Int, Char, Int)
 type Automaton = (Int, String, [Transition], Int, [Int])
 
 
-ex1 :: Automaton 
+ex1 :: Automaton
 ex1 = (3, "ab", [(0,'a',1), (0,'b',0), (1,'a',1), (1,'b',2), (2,'a',1), (2,'b',0)], 0, [2])
 
-ex2 :: Automaton 
+ex2 :: Automaton
 ex2 = (3, "ab", [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)], 0, [2])
 
 
@@ -34,8 +34,8 @@ printAutomaton (states, alphabet, transitions, startState, acceptingStates) = do
     mapM_ printTransition transitions
     putStrLn $ "Start state: " ++ show startState
     putStrLn $ "Accepting states: " ++ show acceptingStates
-    where 
-        printTransition (from, char, to) = 
+    where
+        printTransition (from, char, to) =
             putStrLn $ "(" ++ show from ++ ", " ++ [char] ++ ", " ++ show to ++ ")"
 
 
@@ -86,38 +86,32 @@ isValueInArray value array = elem value array
 --     in 
 
 filterTransition:: [Transition] -> Int -> Char -> [Transition]
-filterTransition transitions startState char = 
-  filter (\(from, char, _) -> from == startState && char == char) transitions
+filterTransition transitions startState targetChar =
+  filter (\(from, char, _) -> from == startState && char == targetChar) transitions
 
 getNextState:: Transition -> Int
 getNextState (from, char, to) = to
 
 isAccepting:: Automaton -> String -> Bool
-isAccepting (states, alphabet, transitions, startState, acceptingStates) (input) = 
-  let 
+isAccepting (states, alphabet, transitions, startState, acceptingStates) (input) =
+  let
     nextInput = drop 1 input
     curChar = input !! 0
-    
+
     -- get next possible transitions as list
-    -- currentStateTransitios = filter (\(from, char, _) -> from == startState && char == curChar) transitions
-    currentStateTransitios = filterTransition
-    
-    canContinue = length nextInput > 0 && length currentStateTransitios > 0 
-    isFinished = length nextInput == 0 && elem startState acceptingStates -- && isValueInArray startState acceptingStates
-    result = if isFinished then
-        True
-        else
-          if canContinue then  
-            isAccepting (states, alphabet, transitions, (getNextState (currentStateTransitios !! 0)), acceptingStates) (nextInput)
-          else
-          False
-    -- result = 
-    --  isFinished = True
-    -- | canContinue = isAccepting (states, alphabet, transitions, (getNextState (currentStateTransitios !! 0)), acceptingStates) (nextInput)
-    -- | otherwise = False
-    in 
-      result
-  
+    currentStateTransitions = filterTransition transitions startState curChar
+
+    canContinue =
+      not (null input) &&
+      not (null currentStateTransitions)
+    isFinished = length nextInput == 0 && elem startState acceptingStates
+    nextState = getNextState (head currentStateTransitions)
+    result
+      | isFinished = True
+      | canContinue = isAccepting (states, alphabet, transitions, nextState, acceptingStates) nextInput
+      | otherwise = False
+ in
+    result
 
 
 
