@@ -1,0 +1,43 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Redundant if" #-}
+module Main
+  where
+import Control.Monad.RWS (First(getFirst))
+
+type Result = [String]
+pp :: Result -> IO ()
+pp x = putStr (concat (map (++"\n") x))
+
+
+type Transition = (Int, Char, Int)
+type Automaton = (Int, String, [Transition], Int, [Int])
+
+
+ex1 :: Automaton 
+ex1 = (3, "ab", [(0,'a',1), (0,'b',0), (1,'a',1), (1,'b',2), (2,'a',1), (2,'b',0)], 0, [2])
+
+ex2 :: Automaton 
+ex2 = (3, "ab", [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)], 0, [2])
+
+-- Helper function to replace an element at a specific index in a list
+replaceAtIndex :: Int -> [a] -> a -> [a]
+replaceAtIndex index xs newElement =
+  take index xs ++ [newElement] ++ drop (index + 1) xs
+
+-- Function to apply a function to a value (pipe operator)
+(|>) :: a -> (a -> b) -> b
+(|>) x f = f x
+
+
+
+
+-- Function to decide if input autmata is deterministic
+isDeterministic:: Automaton  -> Bool
+isDeterministic (automata) = do True
+
+main :: IO ()
+main = do
+    putStrLn "Automaton 1: "
+    -- TODO print automata
+
+
