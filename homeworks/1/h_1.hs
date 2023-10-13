@@ -85,23 +85,36 @@ isValueInArray value array = elem value array
 --   let
 --     in 
 
-getState:: Transition -> Int
-getState (from, char, to) = to
+filterTransition:: [Transition] -> Int -> Char -> [Transition]
+filterTransition transitions startState char = 
+  filter (\(from, char, _) -> from == startState && char == char) transitions
+
+getNextState:: Transition -> Int
+getNextState (from, char, to) = to
 
 isAccepting:: Automaton -> String -> Bool
 isAccepting (states, alphabet, transitions, startState, acceptingStates) (input) = 
   let 
     nextInput = drop 1 input
-    -- nextStartState = startState -- TODO
-    curChar = if length input /= 0 then input !! 0 else '$'
-    -- currentTransition = transitions !! startState
-    -- take frist possible transition
-    currentStateTransitio = filter (\(from, curChar, _) -> from == startState) transitions !! 0
-    nextStartState = getState currentStateTransitio
+    curChar = input !! 0
     
-    -- isDone = length nextInput == 0 -- && length nextState == 0
-    isDone = length nextInput == 0 && isValueInArray startState acceptingStates
-    result = if isDone then isDone else isAccepting (states, alphabet, transitions, nextStartState, acceptingStates) (nextInput)
+    -- get next possible transitions as list
+    -- currentStateTransitios = filter (\(from, char, _) -> from == startState && char == curChar) transitions
+    currentStateTransitios = filterTransition
+    
+    canContinue = length nextInput > 0 && length currentStateTransitios > 0 
+    isFinished = length nextInput == 0 && elem startState acceptingStates -- && isValueInArray startState acceptingStates
+    result = if isFinished then
+        True
+        else
+          if canContinue then  
+            isAccepting (states, alphabet, transitions, (getNextState (currentStateTransitios !! 0)), acceptingStates) (nextInput)
+          else
+          False
+    -- result = 
+    --  isFinished = True
+    -- | canContinue = isAccepting (states, alphabet, transitions, (getNextState (currentStateTransitios !! 0)), acceptingStates) (nextInput)
+    -- | otherwise = False
     in 
       result
   
@@ -121,4 +134,8 @@ main = do
   putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "aab" then "True" else "False"))
   putStrLn ("Is #2 accepting?: " ++ (if isAccepting ex2 "aaa" then "True" else "False"))
 
-
+  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "ab" then "True" else "False"))
+  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "a" then "True" else "False"))
+  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "abb" then "True" else "False"))
+  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "b" then "True" else "False"))
+  putStrLn ("Is #1 accepting?: " ++ (if isAccepting ex1 "abbbbb" then "True" else "False"))
