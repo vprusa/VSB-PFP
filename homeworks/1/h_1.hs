@@ -65,15 +65,6 @@ isDeterministic (states, alphabet, transitions, startState, acceptingStates) =
     isTransitionDeterministic :: [(Int, Char, Int)] -> Bool
     isTransitionDeterministic group = ((length group) == 1)
 
-
--- Second function runs automaton for given string and establishes, if given input string is accepted by the given automaton. It should work for both deterministic and non-deterministic finite automatons.
-
--- canContinue:: Automaton -> String -> Int -> Bool
--- canContinue (states, alphabet, transitions, startState, acceptingStates) (transIndex) (input) = 
---   let
---     trans = transitions[transIndex]
---     in 
-
 -- Function that returns string except first character
 substringExceptFirst :: String -> String
 substringExceptFirst str = drop 1 str
@@ -82,18 +73,16 @@ substringExceptFirst str = drop 1 str
 isValueInArray :: Eq a => a -> [a] -> Bool
 isValueInArray value array = elem value array
 
--- nextTransition:: Transition -> Char -> Transition
--- nextTransition (from, char, to) char = 
---   let
---     in 
-
+-- Function to filter tarnsitions so that only those that match startState and char are returned
 filterTransition:: [Transition] -> Int -> Char -> [Transition]
 filterTransition transitions startState targetChar =
   filter (\(from, char, _) -> from == startState && char == targetChar) transitions
 
+-- Function to return next state index
 getNextState:: Transition -> Int
 getNextState (from, char, to) = to
 
+-- Function that checks if automat can successfully accept String
 isAccepting:: Automaton -> String -> Bool
 isAccepting (states, alphabet, transitions, startState, acceptingStates) (input) =
   let
