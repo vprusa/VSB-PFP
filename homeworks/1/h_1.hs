@@ -3,6 +3,7 @@
 module Main
   where
 import Control.Monad.RWS (First(getFirst))
+import Data.Binary.Get (isEmpty)
 
 type Result = [String]
 pp :: Result -> IO ()
@@ -28,16 +29,34 @@ replaceAtIndex index xs newElement =
 (|>) :: a -> (a -> b) -> b
 (|>) x f = f x
 
-
+-- Function to print automata to standard output
+printAutomaton :: Automaton -> IO ()
+printAutomaton (states, alphabet, transitions, startState, acceptingStates) = do
+    putStrLn $ "Number of states: " ++ show states
+    putStrLn $ "Alphabet: " ++ alphabet
+    putStrLn "Transitions: "
+    mapM_ printTransition transitions
+    putStrLn $ "Start state: " ++ show startState
+    putStrLn $ "Accepting states: " ++ show acceptingStates
+    where 
+        printTransition (from, char, to) = 
+            putStrLn $ "(" ++ show from ++ ", " ++ [char] ++ ", " ++ show to ++ ")"
 
 
 -- Function to decide if input autmata is deterministic
 isDeterministic:: Automaton  -> Bool
-isDeterministic (automata) = do True
+isDeterministic (states, alphabet, transitions, startState, acceptingStates) = let
+        result = alphabet == ""
+       in
+        result
+
 
 main :: IO ()
 main = do
     putStrLn "Automaton 1: "
-    -- TODO print automata
+    printAutomaton ex1
+    putStrLn "\nAutomaton 2: "
+    printAutomaton ex2
 
+    putStrLn ("Is #1 deterministic?: " ++ (if isDeterministic ex1 then "True" else "False"))
 
