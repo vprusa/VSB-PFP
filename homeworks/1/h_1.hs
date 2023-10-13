@@ -37,16 +37,7 @@ printAutomaton (states, alphabet, transitions, startState, acceptingStates) = do
         printTransition (from, char, to) = 
             putStrLn $ "(" ++ show from ++ ", " ++ [char] ++ ", " ++ show to ++ ")"
 
--- Function to decide if an automaton is deterministic
-isDeterministic :: Automaton -> Bool
-isDeterministic (states, alphabet, transitions, startState, acceptingStates) =
-  -- all transitions have to be detemrinistic
-  all isTransitionDeterministic (groupBySameFromAndChar transitions)
-  where
-    -- Check if transitions for a group are deterministic
-    -- Helper function that takes list of transitions and returns Bool that determins if transition has for same start state single input character  
-    isTransitionDeterministic :: [(Int, Char, Int)] -> Bool
-    isTransitionDeterministic group = ((length group) == 1)
+
 
 -- Function that groups transitions by (from state, input symbol)
 groupBySameFromAndChar :: [Transition] -> [[Transition]]
@@ -58,6 +49,24 @@ groupBySameFromAndChar (t : ts) =
 -- Predicate function to check if two transitions have the same "from" state and input symbol
 isSameFromAndChar :: Transition -> Transition -> Bool
 isSameFromAndChar (from1, char1, _) (from2, char2, _) = from1 == from2 && char1 == char2
+
+
+-- Function to decide if an automaton is deterministic
+isDeterministic :: Automaton -> Bool
+isDeterministic (states, alphabet, transitions, startState, acceptingStates) =
+  -- all transitions have to be detemrinistic
+  all isTransitionDeterministic (groupBySameFromAndChar transitions)
+  where
+    -- Check if transitions for a group are deterministic
+    -- Helper function that takes list of transitions and returns Bool that determins if transition has for same start state single input character  
+    isTransitionDeterministic :: [(Int, Char, Int)] -> Bool
+    isTransitionDeterministic group = ((length group) == 1)
+
+
+
+isAccepting:: Automaton -> String -> Bool
+isAccepting (states, alphabet, transitions, startState, acceptingStates) (input) = 
+  do 1 == 1
 
 main :: IO ()
 main = do
