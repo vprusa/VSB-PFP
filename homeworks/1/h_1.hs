@@ -111,6 +111,11 @@ isAccepting (states, alphabet, transitions, startState, acceptingStates) (input)
 convert:: Automaton -> Automaton
 convert (states, alphabet, transitions, startState, acceptingStates) = (states, alphabet, transitions, startState, acceptingStates)
 
+-- according to docu it is necessary to get closures for states (for given char..)
+-- https://condor.depaul.edu/glancast/444class/docs/nfa2dfa.html
+-- 
+
+
 main :: IO ()
 main = do
   putStrLn "Automaton 1: "

@@ -1,15 +1,76 @@
 ghci> main
-Origin Grid:
-AC DE
-FBHIJ
-KGLNO
-PQMRS
-UVWXT
-Modified Grid 5 - sequence: CBGLMRST
+Automaton 1: 
+Number of states: 3
+Alphabet: ab
+Transitions: 
+(0, a, 1)
+(0, b, 0)
+(1, a, 1)
+(1, b, 2)
+(2, a, 1)
+(2, b, 0)
+Start state: 0
+Accepting states: [2]
 
-ABCDE
-FGHIJ
-KLMNO
-PQRST
-UVWX 
+Automaton 2: 
+Number of states: 3
+Alphabet: ab
+Transitions: 
+(0, a, 1)
+(0, a, 0)
+(0, b, 0)
+(1, b, 2)
+Start state: 0
+Accepting states: [2]
+
+1.1.:
+Is #1 deterministic?: True
+Is #2 deterministic?: False
+
+1.2.a) Required inputs:
+Is #1 accepting?: aab True
+Is #2 accepting?: aaa False
+
+1.2.b) Optional inputs:
+Is #1 accepting?: ab True
+Is #1 accepting?: a False
+Is #1 accepting?: abb False
+Is #1 accepting?: aabb False
+Is #1 accepting?: aabb False
+Is #1 accepting?: abab True
+Is #1 accepting?: aba False
+Is #1 accepting?: b False
+Is #1 accepting?: abbbbb False
+Is #2 accepting?: b False
+Is #2 accepting?: ab True
+Is #2 accepting?: bab True
+
+Conver non-deterministic to deterministic:
+
+Converting Automaton 3:
+Number of states: 3
+Alphabet: ab
+Transitions: 
+(0, a, 1)
+(0, b, 0)
+(1, a, 1)
+(1, b, 2)
+(2, a, 1)
+(2, b, 0)
+Start state: 0
+Accepting states: [2]
+
+Converting Automaton 3 - deterministic:
+Number of states: 3
+Alphabet: ab
+Transitions: 
+(0, a, 1)
+(0, b, 0)
+(1, a, 1)
+(1, b, 2)
+(2, a, 1)
+(2, b, 0)
+Start state: 0
+Accepting states: [2]
+done
 
