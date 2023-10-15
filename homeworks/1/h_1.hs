@@ -4,11 +4,12 @@ module Main
   where
 import Control.Monad.RWS (First(getFirst))
 import Data.Binary.Get (isEmpty)
+import Control.Monad
 
 -- https://hackage.haskell.org/package/base-4.19.0.0/docs/Data-List.html#g:15 - partition - split by predicate
 import Data.List (partition)
 import Data.Type.Coercion (trans)
-
+import Data.List (nub, subsequences, sort)
 type Result = [String]
 pp :: Result -> IO ()
 pp x = putStr (concat (map (++"\n") x))
@@ -113,7 +114,67 @@ convert (states, alphabet, transitions, startState, acceptingStates) = (states, 
 
 -- according to docu it is necessary to get closures for states (for given char..)
 -- https://condor.depaul.edu/glancast/444class/docs/nfa2dfa.html
--- 
+-- https://joeylemon.github.io/nfa-to-dfa/
+
+-- Convert an NFA to a DFA
+nfaToDFA :: Automaton -> Automaton
+nfaToDFA (nfaStates, alphabet, nfaTransitions, nfaStartState, nfaAcceptingStates) =
+  let
+    dfaStates = powerset [0..nfaStates - 1] -- Create the set of DFA states
+
+    -- Helper function to compute the epsilon-closure of a set of NFA states
+    epsilonClosure :: [Int] -> [Int]
+    epsilonClosure states = nub $ sort $ concatMap (epsilonClosureOfState nfaTransitions) states
+
+    -- Compute transitions for the DFA
+    -- dfaTransitions = [(dfaState, char, nextState) |
+    --                   dfaState <- dfaStates,
+    --                   char <- alphabet,
+    --                   let nfaStatesInDFAState = dfaState,
+    --                   let nextState = epsilonClosure $ nub $ sort $ concatMap (transitionsForState nfaTransitions char) nfaStatesInDFAState,
+    --                   nextState /= []]
+    -- dfaTransitions = nub [(dfaState !! 0, char, nextState!! 0) |
+    --               dfaState <- dfaStates,
+    --               char <- alphabet,
+    --               let nfaStatesInDFAState = dfaState,
+    --               let nextState = epsilonClosure $ nub $ sort $ concatMap (transitionsForState nfaTransitions char) nfaStatesInDFAState,
+    --               nextState /= []]
+
+    dfaTransitions = nub [(dfaState !! 0, char, nextState !! 0) |
+                  dfaState <- dfaStates,
+                  char <- alphabet,
+                  let nfaStatesInDFAState = dfaState,
+                  let nextState = epsilonClosure $ nub $ sort $ concatMap (transitionsForState nfaTransitions char) nfaStatesInDFAState,
+                  nextState /= []]
+
+    -- dfaTransitions = []
+
+    dfaStartState = epsilonClosure [nfaStartState] -- Compute the start state of the DFA
+    dfaAcceptingStates = [dfaState | dfaState <- dfaStates, any (`elem` nfaAcceptingStates) dfaState]
+  in
+    (length dfaStates, alphabet, dfaTransitions, 0, (nub (concat dfaAcceptingStates)))
+
+-- Helper function to compute the epsilon-closure of an NFA state
+epsilonClosureOfState :: [Transition] -> Int -> [Int]
+epsilonClosureOfState transitions state =
+  let
+    epsilonTransitions = [toState | (fromState, char, toState) <- transitions, fromState == state, char == 'ε']
+    recursiveEpsilonClosure = concatMap (epsilonClosureOfState transitions) epsilonTransitions
+  in
+    state : recursiveEpsilonClosure
+
+-- Helper function to find transitions for a given state and character
+transitionsForState :: [Transition] -> Char -> Int -> [Int]
+transitionsForState transitions char state =
+  [toState | (fromState, inputChar, toState) <- transitions, fromState == state, inputChar == char]
+
+
+-- filterM :: Monad m => (a -> m Bool) -> [a] -> m [a]
+
+-- Helper function to generate powerset of a list
+powerset :: [a] -> [[a]]
+-- powerset xs = filterM (const [True, False]) xs
+powerset xs = filterM (const [True, False]) xs
 
 
 main :: IO ()
@@ -153,7 +214,13 @@ main = do
   putStrLn "\nConverting Automaton 3:"
   printAutomaton ex3
   putStrLn "\nConverting Automaton 3 - deterministic:"
-  printAutomaton (convert ex3)
+  printAutomaton (nfaToDFA ex3)
   putStrLn "done"
   
 
+  putStrLn "\nConverting Automaton 2:"
+  printAutomaton ex2
+  putStrLn "\nConverting Automaton 2 - deterministic:"
+  printAutomaton (nfaToDFA ex2)
+  putStrLn "done"
+  
