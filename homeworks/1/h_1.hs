@@ -2,14 +2,15 @@
 {-# HLINT ignore "Redundant if" #-}
 module Main
   where
-import Control.Monad.RWS (First(getFirst))
+import Control.Monad.RWS (First(getFirst), All (getAll))
 import Data.Binary.Get (isEmpty)
 import Control.Monad
 
 -- https://hackage.haskell.org/package/base-4.19.0.0/docs/Data-List.html#g:15 - partition - split by predicate
 import Data.List (partition)
 import Data.Type.Coercion (trans)
-import Data.List (nub, subsequences, sort)
+import Data.List (nub, subsequences, sort, concatMap)
+import Data.IntMap.Merge.Lazy (merge)
 type Result = [String]
 pp :: Result -> IO ()
 pp x = putStr (concat (map (++"\n") x))
@@ -109,26 +110,63 @@ isAccepting (states, alphabet, transitions, startState, acceptingStates) (input)
 
 --     Finally, create a function that takes a non-deterministic automaton and produces it's deterministic equivalent (the output can be very different based on used methodology).
 
-convert:: Automaton -> Automaton
-convert (states, alphabet, transitions, startState, acceptingStates) = (states, alphabet, transitions, startState, acceptingStates)
 
--- according to docu it is necessary to get closures for states (for given char..)
--- https://condor.depaul.edu/glancast/444class/docs/nfa2dfa.html
--- https://joeylemon.github.io/nfa-to-dfa/
+getAllStates :: [Transition] -> [Int]
+-- getAllStates [(Int, Char, Int)] = map transitions 
+getAllStates transitions = nub (concatMap (\(x, _, y) -> [x, y]) transitions )
 
 
 -- Function to generate all possible states of existing states
-possibleStatesCombinations :: [a] -> [[a]]
+possibleStatesCombinations :: [Int] -> [[Int]]
 possibleStatesCombinations xs = filterM (const [True, False]) xs
+
+-- TODO retype State to conversion compatible type
+-- TODO retype Transition to compatible with new State
+-- terrible haskell is terrible to change and debug...
+newAutomata :: [Int]  -> [[Int]] -> [Transition] -> [(Transition, [Int])] -> Int -> [Int]
+newAutomata (states, allPossibleStates, transitions, startState, originalAcceptingStates) = (states, transitions, originalAcceptingStaes)
+
+-- Function that converts NFA to DFA
+convert:: Automaton -> Automaton
+convert (states, alphabet, transitions, startState, acceptingStates) = 
+  -- let possibleStates = possibleStatesCombinations states
+  -- in (states, alphabet, transitions, startState, acceptingStates)
+  let 
+    allStates = mapTransitionToString transitions
+    -- allEpsionTransitions = states allStates startState, acceptingStates
+    newAutomatonA =  newAutomaton states allStates startState, acceptingStates
+    -- map states, all old transitions -> all states, all staes
+    in
+  (states, alphabet, transitions, startState, acceptingStates)
+-- according to docu it is necessary to get closures for states (for given char..)
+-- https://condor.depaul.edu/glancast/444class/docs/nfa2dfa.html
+-- https://joeylemon.github.io/nfa-to-dfa/
 
 -- TODO it will be necesasry to generate all possible states combinations
 -- - for each state it is necessary to have a transition
 -- - then when all transitions for each states are generated it is required to remove all staes for which there is no incomming edge
 -- - now we have a DFA from input NFA ..
 
+-- mapTransitionToString :: [Transition] -> [String] --[Int]
+mapTransitionToString :: [Transition] -> [Int]
+-- mapTransitionToString [(x,y,z)] =
+mapTransitionToString transtitions =
+    -- [concatMap show t | t <- transitions]
+    -- [concatMap  | t <- x z]
+    -- map (concatMap (\(x, _, y) -> [x, y]) transtitions)
+    -- concat (map (++"\n") (concatMap (\(x, _, y) -> [x, y]) transtitions))
+    nub $ concatMap (\(x, _, y) -> [x, y]) transtitions 
+    -- concatMap show (  nub $ concatMap (\(x, _, y) -> [x, y]) transtitions )
+    -- pp x = putStr ()
+
+    
 
 main :: IO ()
 main = do
+  -- putStrLn ("" ++ (concat (map ((" ")++) (getAllStates testTransitions)   )))
+  -- putStrLn ("" ++ (concat (map  (getAllStates testTransitions))  ))
+  -- printTrans = 
+  
   putStrLn "Automaton 1: "
   printAutomaton ex1
   putStrLn "\nAutomaton 2: "
@@ -164,13 +202,16 @@ main = do
   putStrLn "\nConverting Automaton 3:"
   printAutomaton ex3
   putStrLn "\nConverting Automaton 3 - deterministic:"
-  printAutomaton (toDFAAutomata ex3)
+  printAutomaton (convert ex3)
   putStrLn "done"
   
 
   putStrLn "\nConverting Automaton 2:"
   printAutomaton ex2
   putStrLn "\nConverting Automaton 2 - deterministic:"
-  printAutomaton (toDFAAutomata ex2)
+  printAutomaton (convert ex2)
   putStrLn "done"
+  -- putStrLn (concat (map (++"\n") (mapTransitionToString [(0,'a',1), (1,'b',2)])))
+  putStrLn (concatMap show (mapTransitionToString [(0,'a',1), (1,'b',2)]))
   
+      
