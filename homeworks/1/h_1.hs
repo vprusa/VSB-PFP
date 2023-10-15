@@ -116,65 +116,15 @@ convert (states, alphabet, transitions, startState, acceptingStates) = (states, 
 -- https://condor.depaul.edu/glancast/444class/docs/nfa2dfa.html
 -- https://joeylemon.github.io/nfa-to-dfa/
 
--- Convert an NFA to a DFA
-nfaToDFA :: Automaton -> Automaton
-nfaToDFA (nfaStates, alphabet, nfaTransitions, nfaStartState, nfaAcceptingStates) =
-  let
-    dfaStates = powerset [0..nfaStates - 1] -- Create the set of DFA states
 
-    -- Helper function to compute the epsilon-closure of a set of NFA states
-    epsilonClosure :: [Int] -> [Int]
-    epsilonClosure states = nub $ sort $ concatMap (epsilonClosureOfState nfaTransitions) states
+-- Function to generate all possible states of existing states
+possibleStatesCombinations :: [a] -> [[a]]
+possibleStatesCombinations xs = filterM (const [True, False]) xs
 
-    -- Compute transitions for the DFA
-    -- dfaTransitions = [(dfaState, char, nextState) |
-    --                   dfaState <- dfaStates,
-    --                   char <- alphabet,
-    --                   let nfaStatesInDFAState = dfaState,
-    --                   let nextState = epsilonClosure $ nub $ sort $ concatMap (transitionsForState nfaTransitions char) nfaStatesInDFAState,
-    --                   nextState /= []]
-    -- dfaTransitions = nub [(dfaState !! 0, char, nextState!! 0) |
-    --               dfaState <- dfaStates,
-    --               char <- alphabet,
-    --               let nfaStatesInDFAState = dfaState,
-    --               let nextState = epsilonClosure $ nub $ sort $ concatMap (transitionsForState nfaTransitions char) nfaStatesInDFAState,
-    --               nextState /= []]
-
-    dfaTransitions = nub [(dfaState !! 0, char, nextState !! 0) |
-                  dfaState <- dfaStates,
-                  char <- alphabet,
-                  let nfaStatesInDFAState = dfaState,
-                  let nextState = epsilonClosure $ nub $ sort $ concatMap (transitionsForState nfaTransitions char) nfaStatesInDFAState,
-                  nextState /= []]
-
-    -- dfaTransitions = []
-
-    dfaStartState = epsilonClosure [nfaStartState] -- Compute the start state of the DFA
-    dfaAcceptingStates = [dfaState | dfaState <- dfaStates, any (`elem` nfaAcceptingStates) dfaState]
-  in
-    (length dfaStates, alphabet, dfaTransitions, 0, (nub (concat dfaAcceptingStates)))
-
--- Helper function to compute the epsilon-closure of an NFA state
-epsilonClosureOfState :: [Transition] -> Int -> [Int]
-epsilonClosureOfState transitions state =
-  let
-    epsilonTransitions = [toState | (fromState, char, toState) <- transitions, fromState == state, char == 'ε']
-    recursiveEpsilonClosure = concatMap (epsilonClosureOfState transitions) epsilonTransitions
-  in
-    state : recursiveEpsilonClosure
-
--- Helper function to find transitions for a given state and character
-transitionsForState :: [Transition] -> Char -> Int -> [Int]
-transitionsForState transitions char state =
-  [toState | (fromState, inputChar, toState) <- transitions, fromState == state, inputChar == char]
-
-
--- filterM :: Monad m => (a -> m Bool) -> [a] -> m [a]
-
--- Helper function to generate powerset of a list
-powerset :: [a] -> [[a]]
--- powerset xs = filterM (const [True, False]) xs
-powerset xs = filterM (const [True, False]) xs
+-- TODO it will be necesasry to generate all possible states combinations
+-- - for each state it is necessary to have a transition
+-- - then when all transitions for each states are generated it is required to remove all staes for which there is no incomming edge
+-- - now we have a DFA from input NFA ..
 
 
 main :: IO ()
@@ -214,13 +164,13 @@ main = do
   putStrLn "\nConverting Automaton 3:"
   printAutomaton ex3
   putStrLn "\nConverting Automaton 3 - deterministic:"
-  printAutomaton (nfaToDFA ex3)
+  printAutomaton (toDFAAutomata ex3)
   putStrLn "done"
   
 
   putStrLn "\nConverting Automaton 2:"
   printAutomaton ex2
   putStrLn "\nConverting Automaton 2 - deterministic:"
-  printAutomaton (nfaToDFA ex2)
+  printAutomaton (toDFAAutomata ex2)
   putStrLn "done"
   
