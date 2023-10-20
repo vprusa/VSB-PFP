@@ -5,7 +5,7 @@ module Main
 import Control.Monad.RWS (First(getFirst), All (getAll))
 import Data.Binary.Get (isEmpty)
 import Control.Monad
-
+import Data.Char (chr)
 -- https://hackage.haskell.org/package/base-4.19.0.0/docs/Data-List.html#g:15 - partition - split by predicate
 import Data.List (partition)
 import Data.Type.Coercion (trans)
@@ -116,15 +116,35 @@ getAllStates :: [Transition] -> [Int]
 getAllStates transitions = nub (concatMap (\(x, _, y) -> [x, y]) transitions )
 
 
+
 -- Function to generate all possible states of existing states
 possibleStatesCombinations :: [Int] -> [[Int]]
-possibleStatesCombinations xs = filterM (const [True, False]) xs
+-- possibleStatesCombinations xs = filterM (const [True, False]) xs
+possibleStatesCombinations [] = [[]]  -- The only combination of an empty list is an empty list itself
+possibleStatesCombinations (x:xs) = combinations xs ++ map (x:) (combinations xs)
+
+-- listAllPossibleStates:: Automaton -> String
+-- listAllPossibleStates (states, alphabet, transitions, startState, acceptingStates) = 
+--   concat ( concat ( filterM (const [True, False]) states ))
+
+listAllStates:: Automaton -> [Int]
+listAllStates (states, alphabet, transitions, startState, acceptingStates) = 
+  (getAllStates transitions)
+
+listAllPossibleStates:: Automaton -> [[Int]]
+listAllPossibleStates (states, alphabet, transitions, startState, acceptingStates) = 
+  (possibleStatesCombinations (getAllStates transitions))
+
+combinations :: [a] -> [[a]]
+combinations [] = [[]]  -- The only combination of an empty list is an empty list itself
+combinations (x:xs) = combinations xs ++ map (x:) (combinations xs)
+
 
 -- TODO retype State to conversion compatible type
 -- TODO retype Transition to compatible with new State
 -- terrible haskell is terrible to change and debug...
-newAutomata :: [Int]  -> [[Int]] -> [Transition] -> [(Transition, [Int])] -> Int -> [Int]
-newAutomata (states, allPossibleStates, transitions, startState, originalAcceptingStates) = (states, transitions, originalAcceptingStaes)
+-- newAutomata :: [Int]  -> [[Int]] -> [Transition] -> [(Transition, [Int])] -> Int -> [Int]
+-- newAutomata (states, allPossibleStates, transitions, startState, originalAcceptingStates) = (states, transitions, originalAcceptingStaes)
 
 -- Function that converts NFA to DFA
 convert:: Automaton -> Automaton
@@ -134,7 +154,7 @@ convert (states, alphabet, transitions, startState, acceptingStates) =
   let 
     allStates = mapTransitionToString transitions
     -- allEpsionTransitions = states allStates startState, acceptingStates
-    newAutomatonA =  newAutomaton states allStates startState, acceptingStates
+    -- newAutomatonA =  newAutomaton states allStates startState acceptingStates
     -- map states, all old transitions -> all states, all staes
     in
   (states, alphabet, transitions, startState, acceptingStates)
@@ -159,6 +179,8 @@ mapTransitionToString transtitions =
     -- concatMap show (  nub $ concatMap (\(x, _, y) -> [x, y]) transtitions )
     -- pp x = putStr ()
 
+intListToStringList :: [Int] -> [String]
+intListToStringList = map show
     
 
 main :: IO ()
@@ -213,5 +235,11 @@ main = do
   putStrLn "done"
   -- putStrLn (concat (map (++"\n") (mapTransitionToString [(0,'a',1), (1,'b',2)])))
   putStrLn (concatMap show (mapTransitionToString [(0,'a',1), (1,'b',2)]))
+
+  putStrLn "\nConverting Automaton 2 - all states: " 
+  putStrLn ( (concat ( map show (listAllStates ex2) )))
+  putStrLn "Converting Automaton 2 - possibleStatesCombinations: " 
+  putStrLn ( (concat ( map show (listAllPossibleStates ex2) )))
+  
   
       
