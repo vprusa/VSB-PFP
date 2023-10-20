@@ -195,15 +195,14 @@ newTransitionFrom trans =
   let 
     -- res = ([3], 'd', [2])
     -- res = ([inSt], char, [outSt])
-    inState = concatMap (\(x, _, _) -> [x]) trans
-    char = concatMap (\(_, c, _) -> [c]) trans -- TODO length char > 0 
-    outState = concatMap (\(x, _, y) -> [x, y]) trans
+    inState = nub (concatMap (\(x, _, _) -> [x]) trans)
+    char = nub (concatMap (\(_, c, _) -> [c]) trans) -- TODO length char > 0 
+    outState = nub (concatMap (\(x, _, y) -> [x, y]) trans)
     res = (inState, head char, outState)
   in res
 
 generateNewTrans :: [Int] -> Char -> [Transition] -> Transition2
 generateNewTrans state char oldTransitions =
-
   let
     -- newTransition = ([0],'b', [0])
     -- newTransition = ([0],'b', [0])
@@ -374,10 +373,38 @@ main = do
   putStrLn "Converting Automaton 2 - test generateNewTrans: " 
   printTransitions2 [ generateNewTrans [0] 'a' [(0,'a',0)] ]
 
-  putStrLn "Converting Automaton 2 - test convertToEpsionAutomaton: " 
+  putStrLn "Converting Automaton 2 - test generateNewTrans - ex2: " 
+  -- ex2 = (3, "ab", [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)], 0, [2])
+  -- [][2][1][1,2][0][0,2][0,1][0,1,2]
+  -- [][0][1][2][0,1][0,2][1,2][0,1,2]
+  -- [],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]
+  -- printTransitions2 ( generateNewTransitions [[],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]] "ab" [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)] )
+  printTransitions2 ( generateNewTransitions [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]] "ab" [(1,'a',2), (1,'a',1), (1,'b',1), (2,'b',3)] )
+  --  Transitions2: 
+  --      ([], a, [])
+  --      ([], b, [])
+  --      ([1], a, [1,2])
+  --      ([1], b, [1])
+  --      ([2], a, [])
+  --      ([2], b, [2,3])
+  --      ([3], a, [])
+  --      ([3], b, [])
+  --      ([1], a, [1,2])
+  --      ([1], b, [1])
+  --      ([1], a, [1,2])
+  --      ([1], b, [1])
+  --      ([2,3], a, [])
+  --      ([2], b, [2,3])
+  --      ([1], a, [1,2])
+  --      ([1], b, [1])
+
+  -- printTransitions2 [ generateNewTrans [0] 'a' [(0,'a',0)] ]
+  
+  
+  putStrLn "\nConverting Automaton 2 - test convertToEpsionAutomaton: " 
   putStrLn "pred: " 
   printAutomaton ex2
-  putStrLn "po: " 
+  putStrLn "\npo: " 
   printAutomaton2 (convertToEpsionAutomaton ex2)
 
 
