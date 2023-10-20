@@ -11,6 +11,9 @@ import Data.List (partition)
 import Data.Type.Coercion (trans)
 import Data.List (nub, subsequences, sort, concatMap)
 import Data.IntMap.Merge.Lazy (merge)
+
+import Data.List (intersect)
+
 type Result = [String]
 pp :: Result -> IO ()
 pp x = putStr (concat (map (++"\n") x))
@@ -190,32 +193,70 @@ printTransitions2 transitions = do
 --   in res
 
 
-newTransitionFrom :: [Transition] -> Transition2
+-- newTransitionFrom :: [Transition2] -> Transition2
+-- newTransitionFrom trans = 
+--   let 
+--     -- res = ([3], 'd', [2])
+--     -- res = ([inSt], char, [outSt])
+--     char = nub (concatMap (\(_, c, _) -> [c]) trans) -- TODO length char > 0 
+--     inState = nub (concatMap (\(x, _, _) -> [x]) trans)
+
+--     outState = nub (concatMap (\(_, _, y) -> [y]) trans)
+
+--     res = (inState, head char, outState)
+--   in res
+
+
+newTransitionFrom :: [Transition2] -> Transition2
 newTransitionFrom trans = 
   let 
     -- res = ([3], 'd', [2])
     -- res = ([inSt], char, [outSt])
-    inState = nub (concatMap (\(x, _, _) -> [x]) trans)
     char = nub (concatMap (\(_, c, _) -> [c]) trans) -- TODO length char > 0 
-    outState = nub (concatMap (\(x, _, y) -> [x, y]) trans)
+    inState = concat $ nub (concatMap (\(x, _, _) -> [x]) trans)
+    outState = concat $ nub (concatMap (\(_, _, y) -> [y]) trans)
+
     res = (inState, head char, outState)
   in res
 
-generateNewTrans :: [Int] -> Char -> [Transition] -> Transition2
+
+
+newTransition2From :: [Transition2] -> Transition2
+newTransition2From trans = head trans
+
+generateNewTrans :: [Int] -> Char -> [Transition2] -> Transition2
 generateNewTrans state char oldTransitions =
   let
     -- newTransition = ([0],'b', [0])
     -- newTransition = ([0],'b', [0])
     -- now i need to search for transaction in each 
-    newTransition = if state == [] then ([], char, [])  
+    newTransition = if state == [] then ([], char, []) -- TODO un-hack
     else 
       -- if a is not in any transition then (newState, char, [])
       -- else 
       --    filter (\(inState, c, _) -> c == char) transitions
       let 
+        -- partially working
+        -- relatedTransitions = filter (\(inState, c, _) -> c == char && (not (null (intersect inState state)))) oldTransitions -- TODO ant state 
+        -- result = if length relatedTransitions > 0 then newTransitionFrom relatedTransitions else (state, char, [])  
+        
+        -- relatedTransitions = filter (\(inState, c, _) -> map ((\st -> (c == char && (elem inState state) inState))) oldTransitions -- TODO ant state 
+
+        -- relatedTransitionsList = map (\subState -> (filter (\(inState, c, _) -> c == char && (elem subState inState)) oldTransitions) ) state
+        relatedTransitionsList = concatMap (\subState -> (filter (\(inState, c, outState) -> c == char && (elem subState inState)) oldTransitions) ) state
+        relatedTransitionsIn = concatMap (\(i,_,_)-> i) (relatedTransitionsList)
+        relatedTransitionsOut = concatMap (\(_,_,o)-> o) (relatedTransitionsList)
+        newTrans = [(state, char, nub relatedTransitionsOut)]
+
+        result = if length newTrans > 0 then newTransitionFrom newTrans else (state, char, [])  
+
         -- result = ([1], char, [2])(
-        relatedTransitions = filter (\(inState, c, _) -> c == char && inState == (state !! 0)) oldTransitions -- TODO ant state 
-        result = if length relatedTransitions > 0 then newTransitionFrom relatedTransitions else (state, char, [])  
+        -- relatedTransitions = filter (\(inState, c, _) -> c == char && inState == (head state)) oldTransitions -- TODO ant state 
+        -- relatedTransitions = filter (\(inState, c, _) -> c == char && (elem inState state)) oldTransitions -- TODO ant state 
+        -- relatedTransitions = filter (\(inState, c, _) -> c == char && (not (null (intersect inState state)))) oldTransitions -- TODO ant state 
+        -- result = if length relatedTransitions > 0 then newTransitionFrom relatedTransitions else (state, char, [])  
+        -- result = if length relatedTransitions > 0 then newTransitionFrom relatedTransitions else (state, char, [])  
+        -- result = if length relatedTransitions > 0 then newTransitionFrom relatedTransitions else newTransition2From [(state, char, [])]-- relatedTransitions-- (state, char, [])  
         -- result = ([1], char, [2])  
       in
         result 
@@ -224,12 +265,14 @@ generateNewTrans state char oldTransitions =
 
 -- [[Int]] -> [Transition] -> [Transition2]
 -- [[0]] -> [(0,'a',0)] -> [(([0],'a', [0])]
-generateNewTransitions :: [[Int]] -> String -> [Transition] -> [Transition2]
+generateNewTransitions :: [[Int]] -> String -> [Transition2] -> [Transition2]
 generateNewTransitions newStates alphabet oldTransitions = 
   let
     -- newTransitions = [([0],'a', [0])]
     -- newTransitions = map (\element ->  map (\char -> generateNewTrans element char oldTransitions) alphabet ) newStates 
-    newTransitions = concat ( map (\element -> (map (\char -> generateNewTrans element char oldTransitions) alphabet ) ) newStates )
+    newTransitionsDuplicates = concat ( map (\newState -> (map (\char -> generateNewTrans newState char oldTransitions) alphabet ) ) newStates )
+    newTransitions = nub newTransitionsDuplicates
+    -- newTransitions = newTransitionsDuplicates
     in
       newTransitions
 
@@ -247,13 +290,14 @@ convertToEpsionAutomaton (states, alphabet, transitions, startState, acceptingSt
     -- remove unnecessary transitions
     -- select new accepting states
     newStates = getAllStates transitions
+    remappedTransitions = map (\(inState, char, outState) -> ([inState], char, [outState])) transitions
 
     createTransitions :: Int -> Char -> [Transition2]
     createTransitions newState char =
         [([newState], char, epsilonClosure newState transitions)]
 
     -- newTransitions = concatMap (\s -> concatMap (\c -> createTransitions s c) alphabet) newStates
-    newTransitions = generateNewTransitions [newStates] alphabet transitions -- todo 
+    newTransitions = generateNewTransitions [newStates] alphabet remappedTransitions -- todo 
 
     newAutomaton = (length newStates, alphabet, newTransitions, [startState], [acceptingStates])
     -- newAutomata = (2, alphabet, [([0],'a', [0]), ([0],'b', [1])], [1], [[2]])
@@ -366,12 +410,12 @@ main = do
   putStrLn "Converting Automaton 2 - test generateNewTransitions: " 
   -- printTransitions2 ( generateNewTransitions [[0]] [(0,'a',0)] )
   -- printTransitions2 [ generateNewTrans [0] [(0,'a',0)] ]
-  printTransitions2 ( generateNewTransitions [[], [0]] "ab" [(0,'a',0)] )
+  printTransitions2 ( generateNewTransitions [[], [0]] "ab" [([0],'a',[0])] )
   putStrLn "Converting Automaton 2 - test generateNewTrans: " 
-  printTransitions2 [ generateNewTrans [0] 'a' [(0,'a',0)] ]
+  printTransitions2 [ generateNewTrans [0] 'a' [([0],'a',[0])] ]
 
   putStrLn "Converting Automaton 2 - test generateNewTrans: " 
-  printTransitions2 [ generateNewTrans [0] 'a' [(0,'a',0)] ]
+  printTransitions2 [ generateNewTrans [0] 'a' [([0],'a',[0])] ]
 
   putStrLn "Converting Automaton 2 - test generateNewTrans - ex2: " 
   -- ex2 = (3, "ab", [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)], 0, [2])
@@ -379,24 +423,25 @@ main = do
   -- [][0][1][2][0,1][0,2][1,2][0,1,2]
   -- [],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]
   -- printTransitions2 ( generateNewTransitions [[],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]] "ab" [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)] )
-  printTransitions2 ( generateNewTransitions [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]] "ab" [(1,'a',2), (1,'a',1), (1,'b',1), (2,'b',3)] )
+  printTransitions2 ( generateNewTransitions [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]] "ab" [([1],'a',[2]), ([1],'a',[1]), ([1],'b',[1]), ([2],'b',[3])] )
   --  Transitions2: 
   --      ([], a, [])
   --      ([], b, [])
-  --      ([1], a, [1,2])
+  --      ([1], a, [2,1])
   --      ([1], b, [1])
   --      ([2], a, [])
-  --      ([2], b, [2,3])
+  --      ([2], b, [3])
   --      ([3], a, [])
   --      ([3], b, [])
-  --      ([1], a, [1,2])
+  --      ([1], a, [2,1])
   --      ([1], b, [1])
-  --      ([1], a, [1,2])
+  --      ([1], a, [2,1])
   --      ([1], b, [1])
   --      ([2,3], a, [])
-  --      ([2], b, [2,3])
-  --      ([1], a, [1,2])
+  --      ([2], b, [3])
+  --      ([1], a, [2,1])
   --      ([1], b, [1])
+
 
   -- printTransitions2 [ generateNewTrans [0] 'a' [(0,'a',0)] ]
   
