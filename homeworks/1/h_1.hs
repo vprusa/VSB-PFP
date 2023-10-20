@@ -219,45 +219,24 @@ newTransitionFrom trans =
     res = (inState, head char, outState)
   in res
 
-
-
-newTransition2From :: [Transition2] -> Transition2
-newTransition2From trans = head trans
+hasParent :: Transition2 -> [Transition2] -> Bool
+hasParent (ti,tc,to) transitions = 
+  let
+    hasParentTransition = not (null (filter (\(i,c,o) -> o /= ti) transitions) )
+    in
+      hasParentTransition
 
 generateNewTrans :: [Int] -> Char -> [Transition2] -> Transition2
 generateNewTrans state char oldTransitions =
   let
-    -- newTransition = ([0],'b', [0])
-    -- newTransition = ([0],'b', [0])
-    -- now i need to search for transaction in each 
     newTransition = if state == [] then ([], char, []) -- TODO un-hack
     else 
-      -- if a is not in any transition then (newState, char, [])
-      -- else 
-      --    filter (\(inState, c, _) -> c == char) transitions
       let 
-        -- partially working
-        -- relatedTransitions = filter (\(inState, c, _) -> c == char && (not (null (intersect inState state)))) oldTransitions -- TODO ant state 
-        -- result = if length relatedTransitions > 0 then newTransitionFrom relatedTransitions else (state, char, [])  
-        
-        -- relatedTransitions = filter (\(inState, c, _) -> map ((\st -> (c == char && (elem inState state) inState))) oldTransitions -- TODO ant state 
-
-        -- relatedTransitionsList = map (\subState -> (filter (\(inState, c, _) -> c == char && (elem subState inState)) oldTransitions) ) state
         relatedTransitionsList = concatMap (\subState -> (filter (\(inState, c, outState) -> c == char && (elem subState inState)) oldTransitions) ) state
         relatedTransitionsIn = concatMap (\(i,_,_)-> i) (relatedTransitionsList)
         relatedTransitionsOut = concatMap (\(_,_,o)-> o) (relatedTransitionsList)
         newTrans = [(state, char, nub relatedTransitionsOut)]
-
         result = if length newTrans > 0 then newTransitionFrom newTrans else (state, char, [])  
-
-        -- result = ([1], char, [2])(
-        -- relatedTransitions = filter (\(inState, c, _) -> c == char && inState == (head state)) oldTransitions -- TODO ant state 
-        -- relatedTransitions = filter (\(inState, c, _) -> c == char && (elem inState state)) oldTransitions -- TODO ant state 
-        -- relatedTransitions = filter (\(inState, c, _) -> c == char && (not (null (intersect inState state)))) oldTransitions -- TODO ant state 
-        -- result = if length relatedTransitions > 0 then newTransitionFrom relatedTransitions else (state, char, [])  
-        -- result = if length relatedTransitions > 0 then newTransitionFrom relatedTransitions else (state, char, [])  
-        -- result = if length relatedTransitions > 0 then newTransitionFrom relatedTransitions else newTransition2From [(state, char, [])]-- relatedTransitions-- (state, char, [])  
-        -- result = ([1], char, [2])  
       in
         result 
   in
@@ -269,14 +248,16 @@ generateNewTransitions :: [[Int]] -> String -> [Transition2] -> [Transition2]
 generateNewTransitions newStates alphabet oldTransitions = 
   let
     -- newTransitions = [([0],'a', [0])]
-    -- newTransitions = map (\element ->  map (\char -> generateNewTrans element char oldTransitions) alphabet ) newStates 
     newTransitionsDuplicates = concat ( map (\newState -> (map (\char -> generateNewTrans newState char oldTransitions) alphabet ) ) newStates )
-    newTransitions = nub newTransitionsDuplicates
-    -- newTransitions = newTransitionsDuplicates
+    -- newTransitions = nub newTransitionsDuplicates
+    -- newTransitions =  filter (\(i,c,o) -> i /= []) (nub $ newTransitionsDuplicates)
+    newTransitionsNoDuplicates = nub $ newTransitionsDuplicates
+    newTransitionsNoParentLess =  filter (\tr -> (hasParent tr newTransitionsNoDuplicates)) newTransitionsNoDuplicates
+    newTransitions = filter (\(i,c,o) -> i /= [] && o /= []) newTransitionsNoParentLess
+    -- newTransitions = newTransitionsNoParentLess
+    -- newTransitions = newTransitionsNoParentLess
     in
       newTransitions
-
-
 
 
 -- Function that geenrates all states with epsioln transitions
@@ -292,14 +273,18 @@ convertToEpsionAutomaton (states, alphabet, transitions, startState, acceptingSt
     newStates = getAllStates transitions
     remappedTransitions = map (\(inState, char, outState) -> ([inState], char, [outState])) transitions
 
-    createTransitions :: Int -> Char -> [Transition2]
-    createTransitions newState char =
-        [([newState], char, epsilonClosure newState transitions)]
+    -- createTransitions :: Int -> Char -> [Transition2]
+    -- createTransitions newState char =
+    --     [([newState], char, epsilonClosure newState transitions)]
 
     -- newTransitions = concatMap (\s -> concatMap (\c -> createTransitions s c) alphabet) newStates
     newTransitions = generateNewTransitions [newStates] alphabet remappedTransitions -- todo 
 
-    newAutomaton = (length newStates, alphabet, newTransitions, [startState], [acceptingStates])
+    -- cleanedTransitions = filter (\(i,c,o) -> o /= []) newTransitions
+    cleanedTransitions = newTransitions -- filter (\(i,c,o) -> o /= []) newTransitions
+    cleanedStates = newStates -- TODO from cleanedTransitions
+
+    newAutomaton = (length newStates, alphabet, cleanedTransitions, [startState], [acceptingStates])
     -- newAutomata = (2, alphabet, [([0],'a', [0]), ([0],'b', [1])], [1], [[2]])
     in
       newAutomaton
@@ -447,9 +432,9 @@ main = do
   
   
   putStrLn "\nConverting Automaton 2 - test convertToEpsionAutomaton: " 
-  putStrLn "pred: " 
+  putStrLn "\nbefore: " 
   printAutomaton ex2
-  putStrLn "\npo: " 
+  putStrLn "\nafter: " 
   printAutomaton2 (convertToEpsionAutomaton ex2)
 
 
