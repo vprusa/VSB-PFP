@@ -146,6 +146,128 @@ combinations (x:xs) = combinations xs ++ map (x:) (combinations xs)
 -- newAutomata :: [Int]  -> [[Int]] -> [Transition] -> [(Transition, [Int])] -> Int -> [Int]
 -- newAutomata (states, allPossibleStates, transitions, startState, originalAcceptingStates) = (states, transitions, originalAcceptingStaes)
 
+
+type Transition2 = ([Int], Char, [Int])
+type Automaton2 = (Int, String, [Transition2], [Int], [[Int]])
+
+
+-- Function to print automata to standard output
+printAutomaton2 :: Automaton2 -> IO ()
+printAutomaton2 (states, alphabet, transitions, startState, acceptingStates) = do
+    putStrLn $ "Number of states: " ++ show states
+    putStrLn $ "Alphabet: " ++ alphabet
+    putStrLn "Transitions: "
+    mapM_ printTransition transitions
+    putStrLn $ "Start state: " ++ show startState
+    putStrLn $ "Accepting states: " ++ show acceptingStates
+    where
+        printTransition (from, char, to) =
+            putStrLn $ "(" ++ show from ++ ", " ++ [char] ++ ", " ++ show to ++ ")"
+
+
+-- generateNewTransitions :: [Int] -> String -> [Transition2]
+-- generateNewTransitions newStates alphabet =
+--     concatMap (\s -> concatMap (\c -> createTransitions s c) alphabet) newStates
+--   where
+--     createTransitions :: Int -> Char -> [Transition2]
+--     createTransitions newState char =
+--         [([newState], char, epsilonClosure newState transitions)]
+
+
+printTransitions2 :: [Transition2] -> IO ()
+printTransitions2 transitions = do
+    putStrLn "Transitions2: "
+    mapM_ printTransition transitions
+    where
+        printTransition (from, char, to) =
+            putStrLn $ "(" ++ show from ++ ", " ++ [char] ++ ", " ++ show to ++ ")"
+
+-- newTransitionFrom :: Transition -> Transition2
+-- newTransitionFrom (inSt, char, outSt) = 
+--   let 
+--     -- res = ([3], 'd', [2])
+--     res = ([inSt], char, [outSt])
+--   in res
+
+
+newTransitionFrom :: [Transition] -> Transition2
+newTransitionFrom trans = 
+  let 
+    -- res = ([3], 'd', [2])
+    -- res = ([inSt], char, [outSt])
+    inState = concatMap (\(x, _, _) -> [x]) trans
+    char = concatMap (\(_, c, _) -> [c]) trans -- TODO length char > 0 
+    outState = concatMap (\(x, _, y) -> [x, y]) trans
+    res = (inState, head char, outState)
+  in res
+
+generateNewTrans :: [Int] -> Char -> [Transition] -> Transition2
+generateNewTrans state char oldTransitions =
+
+  let
+    -- newTransition = ([0],'b', [0])
+    -- newTransition = ([0],'b', [0])
+    -- now i need to search for transaction in each 
+    newTransition = if state == [] then ([], char, [])  
+    else 
+      -- if a is not in any transition then (newState, char, [])
+      -- else 
+      --    filter (\(inState, c, _) -> c == char) transitions
+      let 
+        -- result = ([1], char, [2])(
+        relatedTransitions = filter (\(inState, c, _) -> c == char && inState == (state !! 0)) oldTransitions -- TODO ant state 
+        result = if length relatedTransitions > 0 then newTransitionFrom relatedTransitions else (state, char, [])  
+        -- result = ([1], char, [2])  
+      in
+        result 
+  in
+    newTransition
+
+-- [[Int]] -> [Transition] -> [Transition2]
+-- [[0]] -> [(0,'a',0)] -> [(([0],'a', [0])]
+generateNewTransitions :: [[Int]] -> String -> [Transition] -> [Transition2]
+generateNewTransitions newStates alphabet oldTransitions = 
+  let
+    -- newTransitions = [([0],'a', [0])]
+    -- newTransitions = map (\element ->  map (\char -> generateNewTrans element char oldTransitions) alphabet ) newStates 
+    newTransitions = concat ( map (\element -> (map (\char -> generateNewTrans element char oldTransitions) alphabet ) ) newStates )
+    in
+      newTransitions
+
+
+
+
+-- Function that geenrates all states with epsioln transitions
+convertToEpsionAutomaton:: Automaton -> Automaton2
+convertToEpsionAutomaton (states, alphabet, transitions, startState, acceptingStates) = 
+  -- create epsilon closure states
+  let
+    -- newAutomata = (0, alphabet, [], [], [])
+    -- newAutomata = (2, alphabet, [([0],'a', [0]), ([0],'b', [1])], [1], [[2]])
+    -- for each new state for each alphabet char map new transition with end state
+    -- remove unnecessary transitions
+    -- select new accepting states
+    newStates = getAllStates transitions
+
+    createTransitions :: Int -> Char -> [Transition2]
+    createTransitions newState char =
+        [([newState], char, epsilonClosure newState transitions)]
+
+    -- newTransitions = concatMap (\s -> concatMap (\c -> createTransitions s c) alphabet) newStates
+    newTransitions = generateNewTransitions [newStates] alphabet transitions -- todo 
+
+    newAutomaton = (length newStates, alphabet, newTransitions, [startState], [acceptingStates])
+    -- newAutomata = (2, alphabet, [([0],'a', [0]), ([0],'b', [1])], [1], [[2]])
+    in
+      newAutomaton
+
+
+-- Sample function to compute epsilon closure
+epsilonClosure :: Int -> [Transition] -> [Int]
+epsilonClosure state transitions = undefined  -- Implement your epsilon closure logic here
+
+  
+
 -- Function that converts NFA to DFA
 convert:: Automaton -> Automaton
 convert (states, alphabet, transitions, startState, acceptingStates) = 
@@ -240,6 +362,27 @@ main = do
   putStrLn ( (concat ( map show (listAllStates ex2) )))
   putStrLn "Converting Automaton 2 - possibleStatesCombinations: " 
   putStrLn ( (concat ( map show (listAllPossibleStates ex2) )))
+
+
+  putStrLn "Converting Automaton 2 - test generateNewTransitions: " 
+  -- printTransitions2 ( generateNewTransitions [[0]] [(0,'a',0)] )
+  -- printTransitions2 [ generateNewTrans [0] [(0,'a',0)] ]
+  printTransitions2 ( generateNewTransitions [[], [0]] "ab" [(0,'a',0)] )
+  putStrLn "Converting Automaton 2 - test generateNewTrans: " 
+  printTransitions2 [ generateNewTrans [0] 'a' [(0,'a',0)] ]
+
+  putStrLn "Converting Automaton 2 - test generateNewTrans: " 
+  printTransitions2 [ generateNewTrans [0] 'a' [(0,'a',0)] ]
+
+  putStrLn "Converting Automaton 2 - test convertToEpsionAutomaton: " 
+  putStrLn "pred: " 
+  printAutomaton ex2
+  putStrLn "po: " 
+  printAutomaton2 (convertToEpsionAutomaton ex2)
+
+
+  -- putStrLn "Converting Automaton 2 - convertToEpsionAutomata: " 
+  -- printAutomaton2 ( convertToEpsionAutomaton ex2 )
   
   
       
