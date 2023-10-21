@@ -328,15 +328,9 @@ findNewFinalStates oldStates genStates =
 -- - then when all transitions for each states are generated it is required to remove all staes for which there is no incomming edge
 -- - now we have a DFA from input NFA ..
 
--- mapTransitionToString :: [Transition] -> [String] --[Int]
 mapTransitionToString :: [Transition] -> [Int]
--- mapTransitionToString [(x,y,z)] =
 mapTransitionToString transtitions =
     nub $ concatMap (\(x, _, y) -> [x, y]) transtitions 
-
-intListToStringList :: [Int] -> [String]
-intListToStringList = map show
-    
 
 main :: IO ()
 main = do
@@ -372,159 +366,12 @@ main = do
 
   putStrLn "\n1.3. Conver non-deterministic to deterministic:"
 
-  -- putStrLn "\nConverting Automaton 3:"
-  -- printAutomaton ex3
-  -- putStrLn "\nConverting Automaton 3 - deterministic:"
-  -- printAutomaton (convert ex3)
-  -- putStrLn "done"
-  
-
-  -- putStrLn "\nConverting Automaton 2:"
-  -- printAutomaton ex2
-  -- putStrLn "\nConverting Automaton 2 - deterministic:"
-  -- printAutomaton (convert ex2)
-  -- putStrLn "done"
-  -- putStrLn (concat (map (++"\n") (mapTransitionToString [(0,'a',1), (1,'b',2)])))
-  -- putStrLn (concatMap show (mapTransitionToString [(0,'a',1), (1,'b',2)]))
-
-
   putStrLn "\n1.3. Ex 2:"
   printAutomaton ex2
   putStrLn "\n1.3. Ex 2 - converted:"
   printAutomaton2 (convert ex2)
 
-  let 
-    testTrans4 = [([0], 'a', [1]), ([0], 'a', [0]), ([0], 'b', [0]), ([1], 'b', [2])]
-    testStatesOld4 = [2]
-    testStates4 = [[], [0], [1], [2], [0,1], [0,2], [0,1,2]]
-  -- printStatesAndTransitions2 ( generateNewStatesAndTransitions [[], [0], [1], [2], [0,1], [0,2], [0,1,2]] "ab" testTrans4 )
-
-  -- putStrLn "" ++ show (concat (show ( concat (findNewFinalStates testStatesOld4 testStates4))))
-  putStrLn "\n test final states convertion"
-  mapM_ print (findNewFinalStates testStatesOld4 testStates4)
-  putStrLn "\n result"
-  mapM_ print (findNewFinalStates testStatesOld4 testStates4)
-
-
-
-  -- putStrLn "\nEx 2.1 - converted:"
-
-
-  -- putStrLn "New states:"
-  -- putStrLn (show (getAllStates2 testTrans4))
-
-
-  -- putStrLn "\nConverting Automaton 2 - all states: " 
-  -- putStrLn ( (concat ( map show (listAllStates ex2) )))
-  -- putStrLn "Converting Automaton 2 - possibleStatesCombinations: " 
-  -- putStrLn ( (concat ( map show (listAllPossibleStates ex2) )))
-
-
-  -- putStrLn "Converting Automaton 2 - test generateNewTransitions: " 
-  -- printTransitions2 ( generateNewTransitions [[0]] [(0,'a',0)] )
-  -- printTransitions2 [ generateNewTrans [0] [(0,'a',0)] ]
-  -- printTransitions2 ( generateNewTransitions [[], [0]] "ab" [([0],'a',[0])] )
-  -- printStatesAndTransitions2 ( generateNewStatesAndTransitions [[], [0]] "ab" [([0],'a',[0])] )
-  -- putStrLn "Converting Automaton 2 - test generateNewTrans: " 
-  -- printTransitions2 [ generateNewTrans [0] 'a' [([0],'a',[0])] ]
-
-  -- putStrLn "Converting Automaton 2 - test generateNewTrans: " 
-  -- printTransitions2 [ generateNewTrans [0] 'a' [([0],'a',[0])] ]
-
-  -- putStrLn "Converting Automaton 2 - test generateNewTrans - ex2: " 
-  -- ex2 = (3, "ab", [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)], 0, [2])
-  -- [][2][1][1,2][0][0,2][0,1][0,1,2]
-  -- [][0][1][2][0,1][0,2][1,2][0,1,2]
-  -- [],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]
-  -- printTransitions2 ( generateNewTransitions [[],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]] "ab" [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)] )
-  -- printStatesAndTransitions2 ( generateNewStatesAndTransitions [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]] "ab" [([1],'a',[2]), ([1],'a',[1]), ([1],'b',[1]), ([2],'b',[3])] )
-  --  Transitions2: 
-  --      ([], a, [])
-  --      ([], b, [])
-  --      ([1], a, [2,1])
-  --      ([1], b, [1])
-  --      ([2], a, [])
-  --      ([2], b, [3])
-  --      ([3], a, [])
-  --      ([3], b, [])
-  --      ([1], a, [2,1])
-  --      ([1], b, [1])
-  --      ([1], a, [2,1])
-  --      ([1], b, [1])
-  --      ([2,3], a, [])
-  --      ([2], b, [3])
-  --      ([1], a, [2,1])
-  --      ([1], b, [1])
-
-
-  -- printTransitions2 [ generateNewTrans [0] 'a' [(0,'a',0)] ]
-  
-  
-  -- putStrLn "\nConverting Automaton 2 - test convertToEpsionAutomaton: " 
-  -- putStrLn "\nbefore: " 
-  -- printAutomaton ex2
-  -- putStrLn "\nafter: " 
-  -- printAutomaton2 (convertToEpsionAutomaton ex2)
-
-  -- putStrLn "\n!!!!!!!\ncleanTransitionAndStates - test: " 
-  -- cleanTransitionAndStates :: [[Int]] -> [Transition2] -> ([[Int]],[Transition2])
-  -- printStatesAndTransitions2 (cleanTransitionAndStates [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]] [([1],'a',[2]), ([1],'a',[1]), ([1],'b',[1]), ([2],'b',[3])] )
-
-  -- printStatesAndTransitions2 ([[],[1]], [([1],'a',[2])])
-  -- printStatesAndTransitions2 (cleanTransitionAndStates [[],[1]] [([1],'a',[2])])
-  -- putStrLn "\ncleanTransitionAndStates - test #2: " 
-  -- printStatesAndTransitions2 ([[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]], [([1],'a',[2]), ([1],'a',[1]), ([1],'b',[1]), ([2],'b',[3])])
-  -- putStrLn "\ncleanTransitionAndStates - test #2.2: " 
-  -- printStatesAndTransitions2 (cleanTransitionAndStates [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]] [([1],'a',[2]), ([1],'a',[1]), ([1],'b',[1]), ([2],'b',[3])])
-
-  -- putStrLn "\ncleanTransitionAndStates - test #2.3: " 
-  -- printStatesAndTransitions2 ([[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]], [([1], 'a', [2,1]), ([1], 'b', [1]), ([2], 'b', [3]), ([1,2], 'a', [2,1]), ([1,2], 'b', [1,3]), ([1,3], 'a', [2,1]), ([1,3], 'b', [1]), ([2,3], 'b', [3]), ([1,2,3], 'a', [2,1]), ([1,2,3], 'b', [1,3])])
-  -- putStrLn "\ncleanTransitionAndStates - test #2.4: " 
-  -- let
-  --   testStates =  [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
-  --   testTrans = [([1], 'a', [1,2]), ([1], 'b', [1]), ([2], 'b', [3]), ([1,2], 'a', [1,2]), ([1,2], 'b', [1,3]), ([1,3], 'a', [1,2]), ([1,3], 'b', [1]), ([2,3], 'b', [3]), ([1,2,3], 'a', [1]), ([1,2,3], 'b', [1,3])]
-  --   testStates2 =  [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
-  --   testTrans2 = [([1], 'a', [1,2]), ([1,2,3], 'b', [1,3])]
-
-  -- putStrLn "test cleaning 1.1: " 
-  -- printStatesAndTransitions2 (testStates, testTrans)
-  -- putStrLn "test cleaning 1.2: " 
-  -- printStatesAndTransitions2 (cleanTransitionAndStatesRecursion testStates testTrans)
-  
-  -- let 
-  --   (testStates3, testTrans3) = cleanTransitionAndStates testStates testTrans
-  --   (testStates4, testTrans4) = cleanTransitionAndStates testStates3 testTrans3
-  
-  -- putStrLn "test cleaning 1.3: " 
-  -- printStatesAndTransitions2 (cleanTransitionAndStates testStates3 testTrans3)
-  -- putStrLn "test cleaning 1.4: " 
-  -- printStatesAndTransitions2 (cleanTransitionAndStates testStates4 testTrans4)
-  
-
-
-  -- putStrLn "test cleaning 2.1: " 
-  -- printStatesAndTransitions2 (testStates2, testTrans2)
-  -- putStrLn "test cleaning 2.2: " 
-  -- printStatesAndTransitions2 (cleanTransitionAndStates testStates2 testTrans2)
-
-  -- let 
-  --   testTrans = [([1], 'a', [2,1]), ([1], 'b', [1]), ([2], 'b', [3]), ([1,2], 'a', [2,1]), ([1,2], 'b', [1,3]), ([1,3], 'a', [2,1]), ([1,3], 'b', [1]), ([2,3], 'b', [3]), ([1,2,3], 'a', [2,1]), ([1,2,3], 'b', [1,3])] 
-  --   -- testStates = [[1,2]]
-  --   testStates = [[1], [1,2], [1,2,3]]
-  -- -- putStrLn $ "Accepting states: " ++ (show (filter (\(i,c,o) -> o == testState) testTrans) )
-  -- putStrLn $ "Filter states: " ++ (show (filter (\st -> (hasParent st testTrans)) testStates) )
-
-
-
-  --  generateNewTransitions [newStates] alphabet remappedTransitions -- todo 
-
-  -- printCleanTransitionAndStates 
- 
-
-  -- putStrLn "Converting Automaton 2 - convertToEpsionAutomata: " 
-  -- printAutomaton2 ( convertToEpsionAutomaton ex2 )
-  
-  -- [([1], a, [2,1]), ([1], b, [1]), ([2], b, [3]), ([1,2], a, [2,1]), ([1,2], b, [1,3]), ([1,3], a, [2,1]), ([1,3], b, [1]), ([2,3], b, [3]), ([1,2,3], a, [2,1]), ([1,2,3], b, [1,3])]
-  -- filter (\(i,c,o) -> ((elem o newStateNoParentless) && (elem i newStateNoParentless))) 
-  -- putStrLn ( filter (\(i,c,o) -> ((elem o filter (\st -> (hasParent st ([2,3], 'b', [3]))) [[0]]) && (elem i filter (\st -> (hasParent st ([2,3], 'b', [3]))) [[0]]))) [([1], 'a', [2,1]), ([1], 'b', [1]), ([2], 'b', [3]), ([1,2], 'a', [2,1]), ([1,2], 'b', [1,3]), ([1,3], 'a', [2,1]), ([1,3], 'b', [1]), ([2,3], 'b', [3]), ([1,2,3], 'a', [2,1]), ([1,2,3], 'b', [1,3])] )
-      
+  putStrLn "\n1.3. Ex 3:"
+  printAutomaton ex3
+  putStrLn "\n1.3. Ex 3 - converted:"
+  printAutomaton2 (convert ex3)
