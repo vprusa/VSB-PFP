@@ -157,12 +157,13 @@ type Automaton2 = (Int, String, [Transition2], [Int], [[Int]])
 -- Function to print automata to standard output
 printAutomaton2 :: Automaton2 -> IO ()
 printAutomaton2 (states, alphabet, transitions, startState, acceptingStates) = do
-    putStrLn $ "Number of states: " ++ show states
-    putStrLn $ "Alphabet: " ++ alphabet
+    -- putStrLn $ "Number of states: " ++ show states
+    putStrLn $ "Print automaton2: "
+    putStrLn $ "Alphabet: " ++ (show alphabet)
     putStrLn "Transitions: "
-    mapM_ printTransition transitions
+    -- mapM_ printTransition transitions
     putStrLn $ "Start state: " ++ show startState
-    putStrLn $ "Accepting states: " ++ show acceptingStates
+    -- putStrLn $ "Accepting states: " ++ show acceptingStates
     where
         printTransition (from, char, to) =
             putStrLn $ "(" ++ show from ++ ", " ++ [char] ++ ", " ++ show to ++ ")"
@@ -304,42 +305,14 @@ generateNewStatesAndTransitions newStates alphabet oldTransitions =
   let
     -- newTransitions = [([0],'a', [0])]
     newTransitionsDuplicates = concat (map (\newState -> (map (\char -> generateNewTrans newState char oldTransitions) alphabet ) ) newStates )
-    -- newTransitions = nub newTransitionsDuplicates
-    -- newTransitions =  filter (\(i,c,o) -> i /= []) (nub $ newTransitionsDuplicates)
     newTransitionsNoDuplicates = nub $ newTransitionsDuplicates
-    -- newStateNoParentless = filter (\tr -> (hasParent tr newTransitionsNoDuplicates)) newStates
-    -- newStateNoParentless1 =  filter (\tr -> (hasParent tr newTransitionsNoDuplicates)) newStateNoParentless
-    -- newStateNoParentless2 =  filter (\tr -> (hasParent tr newTransitionsNoDuplicates)) newStateNoParentless1 
-    -- newStateNoParentless3 =  filter (\tr -> (hasParent tr newTransitionsNoDuplicates)) newStateNoParentless2
-    -- newStateNoParentless4 =  filter (\tr -> (hasParent tr newTransitionsNoDuplicates)) newStateNoParentless3
-
-    -- newTransitionsNoParentLess =  filter (\tr -> isValidTrans newStateNoParentless tr) newTransitionsNoDuplicates
-
-    -- newStateNoParentless = filter (\st -> (hasParent st newTransitionsNoDuplicates)) newStates
-    -- newTransitionsNoParentLess =  filter (\(i,c,o) -> ((elem o newStateNoParentless) && (elem i newStateNoParentless))) newTransitionsNoDuplicates
-    
-    (newStateNoParentless0, newTransitionsNoParentLess0) = cleanTransitionAndStates newStates newTransitionsNoDuplicates
-    (newStateNoParentless1, newTransitionsNoParentLess1) = cleanTransitionAndStates newStateNoParentless0 newTransitionsNoParentLess0
-    -- (newStateNoParentless2, newTransitionsNoParentLess2) = cleanTransitionAndStates newStateNoParentless1 newTransitionsNoParentLess1
-    -- (newStateNoParentless3, newTransitionsNoParentLess3) = cleanTransitionAndStates newStateNoParentless2 newTransitionsNoParentLess2
-    -- newTransitionsNoParentLess = newTransitionsNoDuplicates -- newTransitionsNoParentLess0
-    -- newTransitionsNoParentLess = -- newTransitionsNoDuplicates -- newTransitionsNoParentLess0
-    newTransitionsNoParentLess = newTransitionsNoParentLess0
-    -- newTransitionsNoParentLess = newTransitionsNoParentLess1
-
-    -- newTransitionsNoParentLess1 =  filter (\tr -> (hasParent tr newTransitionsNoParentLess)) newTransitionsNoParentLess
-    -- newTransitionsNoParentLess2 =  filter (\tr -> (hasParent tr newTransitionsNoParentLess1)) newTransitionsNoParentLess1
-    -- newTransitionsNoParentLess3 =  filter (\tr -> (hasParent tr newTransitionsNoParentLess2)) newTransitionsNoParentLess2
-    -- newTransitionsNoParentLess4 =  filter (\tr -> (hasParent tr newTransitionsNoParentLess3)) newTransitionsNoParentLess3
-    -- newTransitionsNoParentLess5 =  filter (\tr -> (hasParent tr newTransitionsNoParentLess4)) newTransitionsNoParentLess4
-    -- newTransitionsNoParentLess6 =  filter (\tr -> (hasParent tr newTransitionsNoParentLess5)) newTransitionsNoParentLess5
-    -- newTransitionsNoParentLess7 =  filter (\tr -> (hasParent tr newTransitionsNoParentLess6)) newTransitionsNoParentLess6
-    -- newTransitionsNoParentLess8 =  filter (\tr -> (hasParent tr newTransitionsNoParentLess7)) newTransitionsNoParentLess7
-    newTransitions = filter (\(i,c,o) -> i /= [] && o /= []) newTransitionsNoParentLess
-    -- newTransitions = newTransitionsNoParentLess
-    -- newTransitions = newTransitionsNoParentLess
-    in
-      (newStateNoParentless0, newTransitions)
+    (newStateNoParentless, newTransitionsNoParentLess) = cleanTransitionAndStatesRecursion newStates newTransitionsNoDuplicates
+    newTransitionsNoEps = filter (\(i,c,o) -> i /= [] && o /= []) newTransitionsNoParentLess 
+    -- just to make sure ...
+    (newStates, newTransitions) = cleanTransitionAndStatesRecursion newStateNoParentless newTransitionsNoEps
+  in
+    -- (newStateNoParentless0, newTransitions)
+    (newStates, newTransitions)
 
 
 -- Function that geenrates all states with epsioln transitions
@@ -352,29 +325,46 @@ convertToEpsionAutomaton2 (states, alphabet, transitions, startState, acceptingS
     -- for each new state for each alphabet char map new transition with end state
     -- remove unnecessary transitions
     -- select new accepting states
+    putStrLn "starting"
     let 
+      remappedFinalStates = map (\(st) -> [st]) acceptingStates
+    putStrLn "2"
+    let
       newStates = getAllStates transitions
+    putStrLn "3"
+    let
       remappedTransitions = map (\(inState, char, outState) -> ([inState], char, [outState])) transitions
-
-    -- createTransitions :: Int -> Char -> [Transition2]
-    -- createTransitions newState char =
-    --     [([newState], char, epsilonClosure newState transitions)]
-
-    -- newTransitions = concatMap (\s -> concatMap (\c -> createTransitions s c) alphabet) newStates
+    putStrLn "4"
+    let
       (newCleanStates, newTransitions) = generateNewStatesAndTransitions [newStates] alphabet remappedTransitions -- todo 
-
-    -- cleanedTransitions = filter (\(i,c,o) -> o /= []) newTransitions
-      cleanedTransitions = newTransitions -- filter (\(i,c,o) -> o /= []) newTransitions
-      cleanedStates = newStates -- TODO from cleanedTransitions
-
-      newAutomaton = (length newStates, alphabet, cleanedTransitions, [startState], [acceptingStates])
+    putStrLn "5"
+    let
+      newFinalStates = findNewFinalStates remappedFinalStates newCleanStates
+    putStrLn "6"
+    let
+      newAutomaton = (length newCleanStates, alphabet, newTransitions, [startState], newFinalStates)
     -- newAutomata = (2, alphabet, [([0],'a', [0]), ([0],'b', [1])], [1], [[2]])
     -- printTran
-    putStrLn "\n"
+    -- putStrLn ("7 " ++ show (length (concat newCleanStates)))
+    printAutomaton2 newAutomaton
+    putStrLn "8\n"
     
       -- strCleanTransitionAndStates
 
-
+findNewFinalStates :: [[Int]] -> [[Int]] -> [[Int]]
+findNewFinalStates oldStates genStates = 
+  let
+    -- in genStates find elements that have at least some of oldStates
+    hasSubstate :: [Int] -> [[Int]] -> Bool 
+    hasSubstate newState oldStates2 = 
+      let 
+        res4 = filter (\os -> (elem os oldStates2) ) oldStates2 -- TODO
+        -- res3 = 1 == 1
+      in 
+        not (null res4)
+    res = filter (\st -> ( hasSubstate st oldStates ) ) genStates
+  in 
+    res
 
 -- Function that geenrates all states with epsioln transitions
 convertToEpsionAutomaton:: Automaton -> Automaton2
@@ -500,32 +490,33 @@ main = do
   printAutomaton (convert ex2)
   putStrLn "done"
   -- putStrLn (concat (map (++"\n") (mapTransitionToString [(0,'a',1), (1,'b',2)])))
-  putStrLn (concatMap show (mapTransitionToString [(0,'a',1), (1,'b',2)]))
+  -- putStrLn (concatMap show (mapTransitionToString [(0,'a',1), (1,'b',2)]))
+  convertToEpsionAutomaton2 ex2
 
-  putStrLn "\nConverting Automaton 2 - all states: " 
-  putStrLn ( (concat ( map show (listAllStates ex2) )))
-  putStrLn "Converting Automaton 2 - possibleStatesCombinations: " 
-  putStrLn ( (concat ( map show (listAllPossibleStates ex2) )))
+  -- putStrLn "\nConverting Automaton 2 - all states: " 
+  -- putStrLn ( (concat ( map show (listAllStates ex2) )))
+  -- putStrLn "Converting Automaton 2 - possibleStatesCombinations: " 
+  -- putStrLn ( (concat ( map show (listAllPossibleStates ex2) )))
 
 
-  putStrLn "Converting Automaton 2 - test generateNewTransitions: " 
+  -- putStrLn "Converting Automaton 2 - test generateNewTransitions: " 
   -- printTransitions2 ( generateNewTransitions [[0]] [(0,'a',0)] )
   -- printTransitions2 [ generateNewTrans [0] [(0,'a',0)] ]
   -- printTransitions2 ( generateNewTransitions [[], [0]] "ab" [([0],'a',[0])] )
-  printStatesAndTransitions2 ( generateNewStatesAndTransitions [[], [0]] "ab" [([0],'a',[0])] )
-  putStrLn "Converting Automaton 2 - test generateNewTrans: " 
-  printTransitions2 [ generateNewTrans [0] 'a' [([0],'a',[0])] ]
+  -- printStatesAndTransitions2 ( generateNewStatesAndTransitions [[], [0]] "ab" [([0],'a',[0])] )
+  -- putStrLn "Converting Automaton 2 - test generateNewTrans: " 
+  -- printTransitions2 [ generateNewTrans [0] 'a' [([0],'a',[0])] ]
 
-  putStrLn "Converting Automaton 2 - test generateNewTrans: " 
-  printTransitions2 [ generateNewTrans [0] 'a' [([0],'a',[0])] ]
+  -- putStrLn "Converting Automaton 2 - test generateNewTrans: " 
+  -- printTransitions2 [ generateNewTrans [0] 'a' [([0],'a',[0])] ]
 
-  putStrLn "Converting Automaton 2 - test generateNewTrans - ex2: " 
+  -- putStrLn "Converting Automaton 2 - test generateNewTrans - ex2: " 
   -- ex2 = (3, "ab", [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)], 0, [2])
   -- [][2][1][1,2][0][0,2][0,1][0,1,2]
   -- [][0][1][2][0,1][0,2][1,2][0,1,2]
   -- [],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]
   -- printTransitions2 ( generateNewTransitions [[],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]] "ab" [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)] )
-  printStatesAndTransitions2 ( generateNewStatesAndTransitions [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]] "ab" [([1],'a',[2]), ([1],'a',[1]), ([1],'b',[1]), ([2],'b',[3])] )
+  -- printStatesAndTransitions2 ( generateNewStatesAndTransitions [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]] "ab" [([1],'a',[2]), ([1],'a',[1]), ([1],'b',[1]), ([2],'b',[3])] )
   --  Transitions2: 
   --      ([], a, [])
   --      ([], b, [])
@@ -568,25 +559,25 @@ main = do
   -- putStrLn "\ncleanTransitionAndStates - test #2.3: " 
   -- printStatesAndTransitions2 ([[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]], [([1], 'a', [2,1]), ([1], 'b', [1]), ([2], 'b', [3]), ([1,2], 'a', [2,1]), ([1,2], 'b', [1,3]), ([1,3], 'a', [2,1]), ([1,3], 'b', [1]), ([2,3], 'b', [3]), ([1,2,3], 'a', [2,1]), ([1,2,3], 'b', [1,3])])
   -- putStrLn "\ncleanTransitionAndStates - test #2.4: " 
-  let
-    testStates =  [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
-    testTrans = [([1], 'a', [1,2]), ([1], 'b', [1]), ([2], 'b', [3]), ([1,2], 'a', [1,2]), ([1,2], 'b', [1,3]), ([1,3], 'a', [1,2]), ([1,3], 'b', [1]), ([2,3], 'b', [3]), ([1,2,3], 'a', [1]), ([1,2,3], 'b', [1,3])]
-    testStates2 =  [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
-    testTrans2 = [([1], 'a', [1,2]), ([1,2,3], 'b', [1,3])]
+  -- let
+  --   testStates =  [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
+  --   testTrans = [([1], 'a', [1,2]), ([1], 'b', [1]), ([2], 'b', [3]), ([1,2], 'a', [1,2]), ([1,2], 'b', [1,3]), ([1,3], 'a', [1,2]), ([1,3], 'b', [1]), ([2,3], 'b', [3]), ([1,2,3], 'a', [1]), ([1,2,3], 'b', [1,3])]
+  --   testStates2 =  [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
+  --   testTrans2 = [([1], 'a', [1,2]), ([1,2,3], 'b', [1,3])]
 
-  putStrLn "test cleaning 1.1: " 
-  printStatesAndTransitions2 (testStates, testTrans)
-  putStrLn "test cleaning 1.2: " 
-  printStatesAndTransitions2 (cleanTransitionAndStates testStates testTrans)
+  -- putStrLn "test cleaning 1.1: " 
+  -- printStatesAndTransitions2 (testStates, testTrans)
+  -- putStrLn "test cleaning 1.2: " 
+  -- printStatesAndTransitions2 (cleanTransitionAndStatesRecursion testStates testTrans)
   
-  let 
-    (testStates3, testTrans3) = cleanTransitionAndStates testStates testTrans
-    (testStates4, testTrans4) = cleanTransitionAndStates testStates3 testTrans3
+  -- let 
+  -- (testStates3, testTrans3) = cleanTransitionAndStates testStates testTrans
+  -- (testStates4, testTrans4) = cleanTransitionAndStates testStates3 testTrans3
   
-  putStrLn "test cleaning 1.3: " 
-  printStatesAndTransitions2 (cleanTransitionAndStates testStates3 testTrans3)
-  putStrLn "test cleaning 1.4: " 
-  printStatesAndTransitions2 (cleanTransitionAndStates testStates4 testTrans4)
+  -- putStrLn "test cleaning 1.3: " 
+  -- printStatesAndTransitions2 (cleanTransitionAndStates testStates3 testTrans3)
+  -- putStrLn "test cleaning 1.4: " 
+  -- printStatesAndTransitions2 (cleanTransitionAndStates testStates4 testTrans4)
   
   
 
@@ -659,3 +650,11 @@ cleanTransitionAndStates states trans =
     (newStateNoParentless, newTransitionsParentLess)
     -- (newStateNoParentless, trans)
     -- (sortedStates, trans)
+
+cleanTransitionAndStatesRecursion :: [[Int]] -> [Transition2] -> ([[Int]],[Transition2])
+cleanTransitionAndStatesRecursion states trans = 
+  let
+    (newStates, newTrans) = cleanTransitionAndStates states trans
+    (resStates, resTrans) = if (newStates /= states || newTrans /= trans) then cleanTransitionAndStatesRecursion newStates newTrans else (newStates, newTrans)
+    in
+      (resStates, resTrans)
