@@ -56,6 +56,22 @@ reg1 = Concat (Concat (Iteration (Alter (Symbol 'a') (Symbol 'b'))) (Symbol 'a')
 -- Your task will be to create a function convert:
 --    Function convert takes a regular expression and produces an equivalent finite automaton.
 
+
+-- Function to convert regex to string
+regex2Str :: RegExpr -> String
+regex2Str Epsilon = "ε"
+regex2Str (Symbol c) = "Symbol '" ++ [c] ++ "'"
+regex2Str (Iteration re) = "Iteration (" ++ regex2Str re ++ ")"
+regex2Str (Concat re1 re2) = "Concat (" ++ regex2Str re1 ++ ") (" ++ regex2Str re2 ++ ")"
+regex2Str (Alter re1 re2) = "Alter (" ++ regex2Str re1 ++ ") (" ++ regex2Str re2 ++ ")"
+
+regex2Str2 :: RegExpr -> String
+regex2Str2 Epsilon = "ε"
+regex2Str2 (Symbol c) = "" ++ [c] ++ ""
+regex2Str2 (Iteration re) = "" ++ regex2Str2 re ++ ""
+regex2Str2 (Concat re1 re2) = "" ++ regex2Str2 re1 ++ "" ++ regex2Str2 re2 ++ ""
+regex2Str2 (Alter re1 re2) = "" ++ regex2Str2 re1 ++ "" ++ regex2Str2 re2 ++ ""
+
 -- Function to print automata to standard output
 printAutomaton :: Automaton -> IO ()
 printAutomaton (states, alphabet, transitions, startState, acceptingStates) = do
@@ -99,11 +115,13 @@ convert reg =
 
 main :: IO ()
 main = do
-  putStrLn "Automaton 1: "
-  printAutomaton ex1
+  -- putStrLn "Automaton 1: "
+  -- printAutomaton ex1
 
   putStrLn "\n2.1. Conver regex to automata:"
-  putStrLn "\n regex"
-  printRegex reg1
+  putStrLn "\nregex"
+  putStrLn (regex2Str reg1)
+  putStrLn "\nregex - plain"
+  putStrLn (regex2Str2 reg1)
   putStrLn "\nautomata:"
   printAutomaton (convert reg1)
