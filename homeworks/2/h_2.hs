@@ -23,6 +23,17 @@ type Transition = (Int, Char, Int)
 type Automaton = (Int, String, [Transition], Int, [Int])
 
 
+-- Regular expressions are usually defined recursively as follows:
+--     Elementary regular expressions are: just symbols or empty string ϵ {\displaystyle \epsilon } (or empty set but we do not really care about this option).
+--     We can build new regular expressions from existing one using three basic operations: concatenation, alternation and iteration.
+-- We will accomodate this definition into following data structure: 
+
+data RegExpr = Epsilon
+             | Symbol Char
+             | Iteration RegExpr
+             | Concat RegExpr RegExpr
+             | Alter RegExpr RegExpr deriving (Eq, Show)
+
 -- ex1 :: Automaton
 -- ex1 = (3, "ab", [(0,'a',1), (0,'b',0), (1,'a',1), (1,'b',2), (2,'a',1), (2,'b',0)], 0, [2])
 
@@ -38,16 +49,6 @@ ex1 = (3, "ab", [(0,'a',1), (0,'b',0), (1,'a',1), (1,'b',2), (2,'a',1), (2,'b',0
 ex2 :: Automaton 
 ex2 = (3, "ab", [(0,'a',1), (0,'a',0), (0,'b',0), (1,'b',2)], 0, [2])
 
--- Regular expressions are usually defined recursively as follows:
---     Elementary regular expressions are: just symbols or empty string ϵ {\displaystyle \epsilon } (or empty set but we do not really care about this option).
---     We can build new regular expressions from existing one using three basic operations: concatenation, alternation and iteration.
--- We will accomodate this definition into following data structure: 
-
-data RegExpr = Epsilon
-             | Symbol Char
-             | Iteration RegExpr
-             | Concat RegExpr RegExpr
-             | Alter RegExpr RegExpr deriving (Eq, Show)
 
 -- As an example we can use following regular expression: 
 reg1 :: RegExpr 
@@ -67,10 +68,17 @@ regex2Str (Alter re1 re2) = "Alter (" ++ regex2Str re1 ++ ") (" ++ regex2Str re2
 
 regex2Str2 :: RegExpr -> String
 regex2Str2 Epsilon = "ε"
+-- regex2Str2 (Symbol c) = "" ++ [c] ++ ""
+-- regex2Str2 (Iteration re) = "" ++ regex2Str2 re ++ ""
+-- regex2Str2 (Concat re1 re2) = "" ++ regex2Str2 re1 ++ "" ++ regex2Str2 re2 ++ ""
+-- regex2Str2 (Alter re1 re2) = "" ++ regex2Str2 re1 ++ "" ++ regex2Str2 re2 ++ ""
 regex2Str2 (Symbol c) = "" ++ [c] ++ ""
-regex2Str2 (Iteration re) = "" ++ regex2Str2 re ++ ""
+-- regex2Str2 (Iteration (Symbol c)) = "" ++ [c] ++ "*"
+-- regex2Str2 (Concat re1 re2) = "(" ++ regex2Str2 re1 ++ ")(" ++ regex2Str2 re2 ++ ")"
+-- regex2Str2 (Alter re1 re2) = "(" ++ regex2Str2 re1 ++ ")|(" ++ regex2Str2 re2 ++ ")"
+regex2Str2 (Iteration re) = "(" ++ regex2Str2 re ++ ")*"
 regex2Str2 (Concat re1 re2) = "" ++ regex2Str2 re1 ++ "" ++ regex2Str2 re2 ++ ""
-regex2Str2 (Alter re1 re2) = "" ++ regex2Str2 re1 ++ "" ++ regex2Str2 re2 ++ ""
+regex2Str2 (Alter re1 re2) = "" ++ regex2Str2 re1 ++ "|" ++ regex2Str2 re2 ++ ""
 
 -- Function to print automata to standard output
 printAutomaton :: Automaton -> IO ()
@@ -101,6 +109,8 @@ mapTransitionToString transtitions =
 
 convert :: RegExpr -> Automaton
 
+-- Function to convert regular expression to (deterministic?) finite state automata
+-- https://www.geeksforgeeks.org/conversion-of-regular-expression-to-finite-automata/
 convert reg = 
   let
     test = (3, "ab", [(0,'a',1), (0,'b',0), (1,'a',1), (1,'b',2), (2,'a',1), (2,'b',0)], 0, [2])
@@ -117,7 +127,6 @@ main :: IO ()
 main = do
   -- putStrLn "Automaton 1: "
   -- printAutomaton ex1
-
   putStrLn "\n2.1. Conver regex to automata:"
   putStrLn "\nregex"
   putStrLn (regex2Str reg1)
@@ -125,3 +134,4 @@ main = do
   putStrLn (regex2Str2 reg1)
   putStrLn "\nautomata:"
   printAutomaton (convert reg1)
+ 
