@@ -117,6 +117,46 @@ convert reg =
     in
       test
 
+-- Function to find the maximum state number in a list of transitions
+findMaxStateNumber :: [Transition] -> Int
+findMaxStateNumber transitions = maximum $ concatMap (\(q1, _, q2) -> [q1, q2]) transitions
+
+-- Function to convert transitions in one list so that its states are 
+-- disjunct to the other list states 
+convertToDistinctTrans :: [Transition] -> [Transition] -> [Transition]
+convertToDistinctTrans orig toConv =
+  let
+    -- list number of states in orig transitions and 
+    maxInOrig = findMaxStateNumber orig 
+    resConv = map (\(tci, tcc, tco) -> (tci + maxInOrig + 1, tcc, tco + maxInOrig + 1 )) toConv
+    in
+      -- toConv
+      resConv
+
+-- Function to convert a RegExpr into an Automaton
+-- https://www.javatpoint.com/automata-conversion-of-re-to-fa
+convertToAutomaton :: RegExpr -> Automaton
+convertToAutomaton Epsilon = (1, "ε", [(0, 'ε', 0)], 0, [0])
+convertToAutomaton (Symbol c) = (2, [c], [(0, c, 1)], 0, [1])
+convertToAutomaton (Concat re1 re2) =
+    let (q01, s01, ts01, qf01, afs01) = convertToAutomaton re1
+        (q02, s02, ts02, qf02, afs02) = convertToAutomaton re2
+        aboveMaxOrig = (findMaxStateNumber ts01) + 1
+        q02_fix = aboveMaxOrig
+        s02_fix = s02
+        ts02_fix = convertToDistinctTrans ts01 ts02
+        qf02_fix = qf02 + aboveMaxOrig
+        afs02_fix = map (\afs02i -> afs02i + aboveMaxOrig) afs02
+        -- newTransitions = [(qf01, 'ε', q02)]
+        newTransitions = map (\fs01 -> (fs01, 'ε', q02_fix)) afs01 -- [(qf01, 'ε', q02)]
+        newAcceptingStates = afs02_fix
+    in
+        (q01, s01 ++ s02_fix, ts01 ++ ts02_fix ++ newTransitions, qf02_fix, newAcceptingStates)
+convertToAutomaton (Alter re1 re2) =
+        (-1, "x", [(100,'x',200)], 100, [200])
+convertToAutomaton (Iteration re) =
+       (-1, "y", [(400,'y',500)], 400, [500])
+
 -- Note: Intermediate steps may require a finite automaton with epsilon steps. 
 -- Resulting automaton may differ based on used algorithms. 
 
@@ -134,4 +174,11 @@ main = do
   putStrLn (regex2Str2 reg1)
   putStrLn "\nautomata:"
   printAutomaton (convert reg1)
- 
+  putStrLn "\nautomata2:"
+  printAutomaton (convertToAutomaton reg1)
+  putStrLn "\ntest 1:"
+  -- printAutomaton (convertToAutomaton (Concat (Concat (Iteration (Alter (Symbol 'a') (Symbol 'b'))) (Symbol 'a')) (Symbol 'b')))
+  printAutomaton (convertToAutomaton (Symbol 'a'))
+  printAutomaton (convertToAutomaton (Concat (Symbol 'a') (Symbol 'a')))
+  printAutomaton (convertToAutomaton (Concat (Symbol 'a') (Symbol 'b')))
+  printAutomaton (convertToAutomaton (Concat (Symbol 'a') ( Concat (Symbol 'b') (Symbol 'a'))))
