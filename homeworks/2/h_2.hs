@@ -142,6 +142,7 @@ convertToAutomaton (Concat re1 re2) =
     let (q01, s01, ts01, qf01, afs01) = convertToAutomaton re1
         (q02, s02, ts02, qf02, afs02) = convertToAutomaton re2
         aboveMaxOrig = (findMaxStateNumber ts01) + 1
+        -- It is necessary to distinguish between re1 and re2 states
         q02_fix = aboveMaxOrig
         s02_fix = s02
         ts02_fix = convertToDistinctTrans ts01 ts02
@@ -152,10 +153,26 @@ convertToAutomaton (Concat re1 re2) =
         newAcceptingStates = afs02_fix
     in
         (q01, s01 ++ s02_fix, ts01 ++ ts02_fix ++ newTransitions, qf02_fix, newAcceptingStates)
-convertToAutomaton (Alter re1 re2) =
-        (-1, "x", [(100,'x',200)], 100, [200])
+-- convertToAutomaton (Alter re1 re2) =
+        -- (-1, "x", [(100,'x',200)], 100, [200])
 convertToAutomaton (Iteration re) =
        (-1, "y", [(400,'y',500)], 400, [500])
+
+convertToAutomaton (Alter re1 re2) =
+    let (q01, s01, ts01, qf01, afs01) = convertToAutomaton re1
+        (q02, s02, ts02, qf02, afs02) = convertToAutomaton re2
+        aboveMaxOrig = (findMaxStateNumber ts01) + 1
+        -- It is necessary to distinguish between re1 and re2 states
+        ts02_fix = map (\(tr02i, tr02c, tr02o) -> (tr02i, tr02c, tr02o + aboveMaxOrig)) ts02
+        qf02_fix = qf02
+        afs02_fix = map (\afs02i -> afs02i + aboveMaxOrig) afs02
+        -- new state from which the alter will begin using epsiolon steps
+        qNew = (findMaxStateNumber ts02_fix) + 1
+        newTransitions = [(qNew, 'ε', qf01), (qNew, 'ε', qf02_fix)]
+        newAcceptingStates = afs01 ++ afs02_fix
+    in
+        (qNew, s01 ++ s02, ts01 ++ ts02_fix ++ newTransitions, qNew, newAcceptingStates)
+
 
 -- Note: Intermediate steps may require a finite automaton with epsilon steps. 
 -- Resulting automaton may differ based on used algorithms. 
@@ -176,9 +193,20 @@ main = do
   printAutomaton (convert reg1)
   putStrLn "\nautomata2:"
   printAutomaton (convertToAutomaton reg1)
-  putStrLn "\ntest 1:"
+  putStrLn "\nconcat tests 1:"
   -- printAutomaton (convertToAutomaton (Concat (Concat (Iteration (Alter (Symbol 'a') (Symbol 'b'))) (Symbol 'a')) (Symbol 'b')))
   printAutomaton (convertToAutomaton (Symbol 'a'))
   printAutomaton (convertToAutomaton (Concat (Symbol 'a') (Symbol 'a')))
   printAutomaton (convertToAutomaton (Concat (Symbol 'a') (Symbol 'b')))
   printAutomaton (convertToAutomaton (Concat (Symbol 'a') ( Concat (Symbol 'b') (Symbol 'a'))))
+  putStrLn "\n\n!!!\n\nalter test 1:"
+  -- split sample: 
+  --     q0-(a|b)->[q1] => q0-(a)->[q1]
+  --                         -(b)->[q2]
+  printAutomaton (convertToAutomaton (Alter (Symbol 'a') (Symbol 'b')))
+  putStrLn "\n!!!"
+  printAutomaton (convertToAutomaton (Alter (Symbol 'a') ( Concat (Symbol 'b') (Symbol 'c'))))
+  -- printAutomaton (convertToAutomaton (Alter (Symbol 'a') ( Concat (Symbol 'b') (Symbol 'a'))))
+  -- printAutomaton (convertToAutomaton (Alter ( Concat (Symbol 'b') (Symbol 'a')) ( Concat (Symbol 'b') (Symbol 'a'))))
+  -- printAutomaton (convertToAutomaton (Alter ( Concat (Symbol 'a') (Symbol 'b')) ( Concat (Symbol 'c') (Symbol 'd'))))
+  
