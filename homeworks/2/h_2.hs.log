@@ -1,0 +1,196 @@
+ghci> main
+
+2.1. Conver regex to automata:
+
+regex
+Concat (Concat (Iteration (Alter (Symbol 'a') (Symbol 'b'))) (Symbol 'a')) (Symbol 'b')
+
+regex - plain
+(a|b)*ab
+
+automata:
+Number of states: 3
+Alphabet: ab
+Transitions: 
+(0, a, 1)
+(0, b, 0)
+(1, a, 1)
+(1, b, 2)
+(2, a, 1)
+(2, b, 0)
+Start state: 0
+Accepting states: [2]
+
+automata2:
+Number of states: 4
+Alphabet: abab
+Transitions: 
+(0, a, 1)
+(1, ε, 4)
+(1, ε, 5)
+(2, b, 3)
+(3, ε, 4)
+(3, ε, 5)
+(4, ε, 0)
+(4, ε, 1)
+(4, ε, 2)
+(4, ε, 3)
+(5, a, 6)
+(6, ε, 7)
+(7, b, 8)
+Start state: 4
+Accepting states: [8]
+
+concat tests 1:
+Number of states: 2
+Alphabet: a
+Transitions: 
+(0, a, 1)
+Start state: 0
+Accepting states: [1]
+Number of states: 2
+Alphabet: aa
+Transitions: 
+(0, a, 1)
+(1, ε, 2)
+(2, a, 3)
+Start state: 0
+Accepting states: [3]
+Number of states: 2
+Alphabet: ab
+Transitions: 
+(0, a, 1)
+(1, ε, 2)
+(2, b, 3)
+Start state: 0
+Accepting states: [3]
+Number of states: 2
+Alphabet: aba
+Transitions: 
+(0, a, 1)
+(1, ε, 2)
+(2, b, 3)
+(3, ε, 4)
+(4, a, 5)
+Start state: 0
+Accepting states: [5]
+Number of states: 2
+Alphabet: baa
+Transitions: 
+(0, b, 1)
+(1, ε, 2)
+(2, a, 3)
+(3, ε, 4)
+(4, a, 5)
+Start state: 0
+Accepting states: [5]
+
+
+!!!
+
+alter test 1:
+Number of states: 4
+Alphabet: ab
+Transitions: 
+(0, a, 1)
+(2, b, 3)
+(4, ε, 0)
+(4, ε, 2)
+Start state: 4
+Accepting states: [1,3]
+
+!!!
+Number of states: 6
+Alphabet: abc
+Transitions: 
+(0, a, 1)
+(2, b, 3)
+(3, ε, 4)
+(4, c, 5)
+(6, ε, 0)
+(6, ε, 2)
+Start state: 6
+Accepting states: [1,5]
+Number of states: 6
+Alphabet: bca
+Transitions: 
+(0, b, 1)
+(1, ε, 2)
+(2, c, 3)
+(4, a, 5)
+(6, ε, 0)
+(6, ε, 4)
+Start state: 6
+Accepting states: [3,5]
+
+
+!!!
+
+iterate test 1:
+Number of states: 2
+Alphabet: a
+Transitions: 
+(0, a, 1)
+(0, ε, 1)
+(1, ε, 0)
+Start state: 0
+Accepting states: [1]
+
+!!!
+Number of states: 2
+Alphabet: bc
+Transitions: 
+(0, b, 1)
+(0, ε, 3)
+(1, ε, 2)
+(2, c, 3)
+(3, ε, 0)
+Start state: 0
+Accepting states: [3]
+
+!!!
+Number of states: 4
+Alphabet: de
+Transitions: 
+(0, d, 1)
+(1, ε, 4)
+(2, e, 3)
+(3, ε, 4)
+(4, ε, 0)
+(4, ε, 1)
+(4, ε, 2)
+(4, ε, 3)
+Start state: 4
+Accepting states: [1,3]
+
+
+!!!
+
+convert test 1:
+
+regex
+Concat (Concat (Iteration (Alter (Symbol 'a') (Symbol 'b'))) (Symbol 'a')) (Symbol 'b')
+
+regex - plain
+(a|b)*ab
+
+automata2:
+Number of states: 4
+Alphabet: abab
+Transitions: 
+(0, a, 1)
+(1, ε, 4)
+(1, ε, 5)
+(2, b, 3)
+(3, ε, 4)
+(3, ε, 5)
+(4, ε, 0)
+(4, ε, 1)
+(4, ε, 2)
+(4, ε, 3)
+(5, a, 6)
+(6, ε, 7)
+(7, b, 8)
+Start state: 4
+Accepting states: [8]
+

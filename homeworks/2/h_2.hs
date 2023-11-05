@@ -127,11 +127,25 @@ convertToDistinctTrans :: [Transition] -> [Transition] -> [Transition]
 convertToDistinctTrans orig toConv =
   let
     -- list number of states in orig transitions and 
-    maxInOrig = findMaxStateNumber orig 
-    resConv = map (\(tci, tcc, tco) -> (tci + maxInOrig + 1, tcc, tco + maxInOrig + 1 )) toConv
+    maxInOrig = findMaxStateNumber orig + 1
+    resConv = map (\(tci, tcc, tco) -> (tci + maxInOrig, tcc, tco + maxInOrig)) toConv
     in
       -- toConv
       resConv
+
+-- Function to find the transition with the lowest first number
+-- findMinFirstNumberTransition :: [Transition] -> Transition
+-- -- findMinFirstNumberTransition [] = error "Empty list of transitions"
+-- findMinFirstNumberTransition (x:xs) = findMinFirstNumberTransition' xs x
+--   where
+--     findMinFirstNumberTransition' [] minTrans = minTrans
+--     findMinFirstNumberTransition' ((q1, _, _) : rest) minTrans@(minQ1, _, _)
+--       | q1 < minQ1 = findMinFirstNumberTransition' rest (q1, _, _)
+--       | otherwise = findMinFirstNumberTransition' rest minTrans
+
+-- Function to sort transitions by their first number
+sortTransitionsByFirstNumber :: [Transition] -> [Transition]
+sortTransitionsByFirstNumber transitions = sort transitions
 
 -- Function to convert a RegExpr into an Automaton
 -- https://www.javatpoint.com/automata-conversion-of-re-to-fa
@@ -148,31 +162,37 @@ convertToAutomaton (Concat re1 re2) =
         ts02_fix = convertToDistinctTrans ts01 ts02
         qf02_fix = qf02 + aboveMaxOrig
         afs02_fix = map (\afs02i -> afs02i + aboveMaxOrig) afs02
-        -- newTransitions = [(qf01, 'ε', q02)]
         newTransitions = map (\fs01 -> (fs01, 'ε', q02_fix)) afs01 -- [(qf01, 'ε', q02)]
         newAcceptingStates = afs02_fix
     in
-        (q01, s01 ++ s02_fix, ts01 ++ ts02_fix ++ newTransitions, qf02_fix, newAcceptingStates)
--- convertToAutomaton (Alter re1 re2) =
-        -- (-1, "x", [(100,'x',200)], 100, [200])
-convertToAutomaton (Iteration re) =
-       (-1, "y", [(400,'y',500)], 400, [500])
+        (q01, s01 ++ s02_fix, nub $ sort ( ts01 ++ ts02_fix ++ newTransitions), qf01, sort newAcceptingStates)
 
 convertToAutomaton (Alter re1 re2) =
     let (q01, s01, ts01, qf01, afs01) = convertToAutomaton re1
         (q02, s02, ts02, qf02, afs02) = convertToAutomaton re2
         aboveMaxOrig = (findMaxStateNumber ts01) + 1
         -- It is necessary to distinguish between re1 and re2 states
-        ts02_fix = map (\(tr02i, tr02c, tr02o) -> (tr02i, tr02c, tr02o + aboveMaxOrig)) ts02
-        qf02_fix = qf02
+        ts02_fix = convertToDistinctTrans ts01 ts02
+        ts02_fix_sorted = sortTransitionsByFirstNumber ts02_fix
+        (ts02_fix_st_i, _, _) = head ts02_fix_sorted
+        qf02_fix = ts02_fix_st_i -- findStartState qf02
         afs02_fix = map (\afs02i -> afs02i + aboveMaxOrig) afs02
         -- new state from which the alter will begin using epsiolon steps
         qNew = (findMaxStateNumber ts02_fix) + 1
         newTransitions = [(qNew, 'ε', qf01), (qNew, 'ε', qf02_fix)]
         newAcceptingStates = afs01 ++ afs02_fix
     in
-        (qNew, s01 ++ s02, ts01 ++ ts02_fix ++ newTransitions, qNew, newAcceptingStates)
+        (qNew, s01 ++ s02, nub $ sort (ts01 ++ ts02_fix ++ newTransitions), qNew, sort newAcceptingStates)
+        -- (-1, "x", [(100,'x',200)], 100, [200])
 
+convertToAutomaton (Iteration re) =
+    let (q0, s0, ts0, qf0, afs0) = convertToAutomaton re
+        newTransAfs0 = map (\afs0i -> (afs0i, 'ε', qf0)) afs0 -- backward transitions
+        newTransQf0 = map (\afs0i -> (qf0, 'ε', afs0i)) afs0 -- forward transition
+        newAcceptingStates = afs0 -- TODO when removing epsilon transitions new final states will be generated
+    in
+      -- (q0, s0, (ts0 ++ newTransAfs0 ++ newTransQf0), qf0, nub newAcceptingStates)
+      (q0, s0, sort (ts0 ++ newTransAfs0 ++ newTransQf0), qf0, sort (nub newAcceptingStates))
 
 -- Note: Intermediate steps may require a finite automaton with epsilon steps. 
 -- Resulting automaton may differ based on used algorithms. 
@@ -199,6 +219,7 @@ main = do
   printAutomaton (convertToAutomaton (Concat (Symbol 'a') (Symbol 'a')))
   printAutomaton (convertToAutomaton (Concat (Symbol 'a') (Symbol 'b')))
   printAutomaton (convertToAutomaton (Concat (Symbol 'a') ( Concat (Symbol 'b') (Symbol 'a'))))
+  printAutomaton (convertToAutomaton (Concat ( Concat (Symbol 'b') (Symbol 'a')) (Symbol 'a')))
   putStrLn "\n\n!!!\n\nalter test 1:"
   -- split sample: 
   --     q0-(a|b)->[q1] => q0-(a)->[q1]
@@ -206,7 +227,27 @@ main = do
   printAutomaton (convertToAutomaton (Alter (Symbol 'a') (Symbol 'b')))
   putStrLn "\n!!!"
   printAutomaton (convertToAutomaton (Alter (Symbol 'a') ( Concat (Symbol 'b') (Symbol 'c'))))
+  printAutomaton (convertToAutomaton (Alter ( Concat (Symbol 'b') (Symbol 'c')) (Symbol 'a')))
   -- printAutomaton (convertToAutomaton (Alter (Symbol 'a') ( Concat (Symbol 'b') (Symbol 'a'))))
   -- printAutomaton (convertToAutomaton (Alter ( Concat (Symbol 'b') (Symbol 'a')) ( Concat (Symbol 'b') (Symbol 'a'))))
   -- printAutomaton (convertToAutomaton (Alter ( Concat (Symbol 'a') (Symbol 'b')) ( Concat (Symbol 'c') (Symbol 'd'))))
-  
+  putStrLn "\n\n!!!\n\niterate test 1:"
+  -- split sample: 
+  --     q0-(a|b)->[q1] => q0-(a)->[q1]
+  --                         -(b)->[q2]
+  printAutomaton (convertToAutomaton (Iteration (Symbol 'a')))
+  putStrLn "\n!!!"
+  printAutomaton (convertToAutomaton (Iteration (Concat (Symbol 'b') (Symbol 'c'))))
+  putStrLn "\n!!!"
+  printAutomaton (convertToAutomaton (Iteration (Alter (Symbol 'd') (Symbol 'e'))))
+
+  -- printAutomaton (convertToAutomaton (Alter (Symbol 'a') ( Concat (Symbol 'b') (Symbol 'c'))))
+  -- printAutomaton (convertToAutomaton (Alter ( Concat (Symbol 'b') (Symbol 'c')) (Symbol 'a')))
+
+  putStrLn "\n\n!!!\n\nconvert test 1:"
+  putStrLn "\nregex"
+  putStrLn (regex2Str reg1)
+  putStrLn "\nregex - plain"
+  putStrLn (regex2Str2 reg1)
+  putStrLn "\nautomata2:"
+  printAutomaton (convertToAutomaton reg1)
