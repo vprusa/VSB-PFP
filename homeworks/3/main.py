@@ -6,6 +6,7 @@ class ImmutableArray:
     def __init__(self, size):
         self.size = size
         self.array = self._build_array(size)
+        self.levels = self._calc_levels(size)
 
     def _calc_levels(self, size):
         if size <= 3:
@@ -58,41 +59,26 @@ class ImmutableArray:
                 right = self._build_array(split_size)
             else:
                 right = None
-
-            # triplets = size // 3
-            # self.levels = self._calc_levels(size)
-            # split_size = size // 3
-            # split_size_rest = size % 3
-            # left_size = split_size
-            # middle_size = split_size
-            # right_size = split_size_rest
-            # eq_sizes = size // 3
-            # # 12 / 3 = 4
-            # # 1 , 1 , 1
-            # # middle_size = size / 3
-            # # right_size = size / 3
-            # # left_size = (size - 1) // 3
-            # # right_size = (size - 1) // 3 + (size - 1) % 3
-            #
-            # left = self._build_array(left_size)
-            # if middle_size > 0:
-            #     middle = self._build_array(eq_sizes)
-            # else:
-            #     middle = None  # what if no middle needed
-            # if right_size > 0:
-            #     right = self._build_array(right_size)
-            # else:
-            #     right = None  # what if no middle needed
-        # else:
-        #     left_size = (size - 1) // 3
-        #     right_size = (size - 1) // 3 + (size - 1) % 3
-        #
-        #     left = self._build_array(left_size)
-        #     middle = [None]  # Placeholder for a leaf value
-        #     right = self._build_array(right_size)
-
             return [Triple(left, middle, right)]
 
+    def get_value(self, index, node=None):
+        if index > self.size:
+            raise IndexError(f"Index {index} out of range {self.size} for the array.")
+        split_size = self.size // 3
+        split_size_rest = self.size % 3
+        left_index_max = split_size + split_size_rest
+        middle_index_max = split_size * 2
+        if isinstance(node, Triple):
+            if left_index_max > index:
+                return self.get_value(left_index_max - index, node.data[0])
+            elif middle_index_max > index:
+                return self.get_value(left_index_max - index, node.data[1])
+            else:
+                return self.get_value(left_index_max-index, node.data[2])
+        else:
+            return node
+
+#
 # # Example usage:
 # size = 10
 # immutable_array = ImmutableArray(size)
