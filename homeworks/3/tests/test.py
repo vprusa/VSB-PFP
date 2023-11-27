@@ -54,13 +54,19 @@ class TestImmutableArray(unittest.TestCase):
     def test_create_for_four_elements(self):
         size = 30
         immutable_array = ImmutableArray(size)
-        self.assertEqual(immutable_array.levels, 3)
+        self.assertEqual(immutable_array.levels, 4)
 
 
     def test_create_for_four_elements(self):
         size = 31
         immutable_array = ImmutableArray(size)
-        self.assertEqual(immutable_array.levels, 3)
+        self.assertEqual(immutable_array.levels, 4)
+
+    def test_iter_for_four_elements(self):
+        size = 31
+        immutable_array = ImmutableArray(size)
+        self.assertEqual(immutable_array.levels, 4)
+
 
     # def test_add_one_element(self):
     #     size = 1

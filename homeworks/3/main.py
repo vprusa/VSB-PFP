@@ -29,23 +29,10 @@ class ImmutableArray:
     # Prepare structure
     # TODO also fill with data
     def _build_array(self, size):
-        self.levels = 0
-        self.size = size
+        # self.size = size
         if size == 0:
-            # manual definition
-            self.levels = 0
             return []
-        elif size == 1:
-            # manual definition
-            self.levels = 1
-            return Triple(None, None, None)
-        elif size == 2:
-            # manual definition
-            self.levels = 1
-            return Triple(None, None, None)
-        elif size == 3:
-            # manual definition
-            self.levels = 1
+        elif 1 <= size <= 3:
             return Triple(None, None, None)
         else:
             split_size = size // 3
@@ -77,6 +64,18 @@ class ImmutableArray:
                 return self.get_value(left_index_max-index, node.data[2])
         else:
             return node
+
+    def __iter__(self):
+        return self._iter(self.array)
+
+    def _iter(self, node):
+        if not node:
+            return
+        for child in node:
+            if isinstance(child, Triple):
+                yield from self._iter(child.data)
+            else:
+                yield child
 
 #
 # # Example usage:
