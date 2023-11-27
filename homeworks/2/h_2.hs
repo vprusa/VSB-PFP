@@ -4,7 +4,7 @@ module Main
   where
 import Control.Monad.RWS (First(getFirst), All (getAll))
 import Data.Binary.Get (isEmpty)
-import Control.Monad
+import Control.Monad ()
 import Data.Char (chr)
 -- https://hackage.haskell.org/package/base-4.19.0.0/docs/Data-List.html#g:15 - partition - split by predicate
 import Data.List (partition)
@@ -12,12 +12,14 @@ import Data.Type.Coercion (trans)
 import Data.List (nub, subsequences, sort, concatMap)
 import Data.IntMap.Merge.Lazy (merge)
 
+import qualified Data.Set as Set
+import Data.List (nub, sort)
+
 import Data.List (intersect)
 
 type Result = [String]
 pp :: Result -> IO ()
 pp x = putStr (concat (map (++"\n") x))
-
 
 type Transition = (Int, Char, Int)
 type Automaton = (Int, String, [Transition], Int, [Int])
@@ -68,14 +70,7 @@ regex2Str (Alter re1 re2) = "Alter (" ++ regex2Str re1 ++ ") (" ++ regex2Str re2
 
 regex2Str2 :: RegExpr -> String
 regex2Str2 Epsilon = "ε"
--- regex2Str2 (Symbol c) = "" ++ [c] ++ ""
--- regex2Str2 (Iteration re) = "" ++ regex2Str2 re ++ ""
--- regex2Str2 (Concat re1 re2) = "" ++ regex2Str2 re1 ++ "" ++ regex2Str2 re2 ++ ""
--- regex2Str2 (Alter re1 re2) = "" ++ regex2Str2 re1 ++ "" ++ regex2Str2 re2 ++ ""
 regex2Str2 (Symbol c) = "" ++ [c] ++ ""
--- regex2Str2 (Iteration (Symbol c)) = "" ++ [c] ++ "*"
--- regex2Str2 (Concat re1 re2) = "(" ++ regex2Str2 re1 ++ ")(" ++ regex2Str2 re2 ++ ")"
--- regex2Str2 (Alter re1 re2) = "(" ++ regex2Str2 re1 ++ ")|(" ++ regex2Str2 re2 ++ ")"
 regex2Str2 (Iteration re) = "(" ++ regex2Str2 re ++ ")*"
 regex2Str2 (Concat re1 re2) = "" ++ regex2Str2 re1 ++ "" ++ regex2Str2 re2 ++ ""
 regex2Str2 (Alter re1 re2) = "" ++ regex2Str2 re1 ++ "|" ++ regex2Str2 re2 ++ ""
@@ -130,18 +125,7 @@ convertToDistinctTrans orig toConv =
     maxInOrig = findMaxStateNumber orig + 1
     resConv = map (\(tci, tcc, tco) -> (tci + maxInOrig, tcc, tco + maxInOrig)) toConv
     in
-      -- toConv
       resConv
-
--- Function to find the transition with the lowest first number
--- findMinFirstNumberTransition :: [Transition] -> Transition
--- -- findMinFirstNumberTransition [] = error "Empty list of transitions"
--- findMinFirstNumberTransition (x:xs) = findMinFirstNumberTransition' xs x
---   where
---     findMinFirstNumberTransition' [] minTrans = minTrans
---     findMinFirstNumberTransition' ((q1, _, _) : rest) minTrans@(minQ1, _, _)
---       | q1 < minQ1 = findMinFirstNumberTransition' rest (q1, _, _)
---       | otherwise = findMinFirstNumberTransition' rest minTrans
 
 -- Function to sort transitions by their first number
 sortTransitionsByFirstNumber :: [Transition] -> [Transition]
@@ -233,8 +217,8 @@ main = do
   -- printAutomaton (convertToAutomaton (Alter ( Concat (Symbol 'a') (Symbol 'b')) ( Concat (Symbol 'c') (Symbol 'd'))))
   putStrLn "\n\n!!!\n\niterate test 1:"
   -- split sample: 
-  --     q0-(a|b)->[q1] => q0-(a)->[q1]
-  --                         -(b)->[q2]
+  --     q0-(a*)->[q1] => q0--(a)->[q1]
+  --                        <-(ε)->
   printAutomaton (convertToAutomaton (Iteration (Symbol 'a')))
   putStrLn "\n!!!"
   printAutomaton (convertToAutomaton (Iteration (Concat (Symbol 'b') (Symbol 'c'))))
@@ -251,3 +235,5 @@ main = do
   putStrLn (regex2Str2 reg1)
   putStrLn "\nautomata2:"
   printAutomaton (convertToAutomaton reg1)
+
+  putStrLn "\n\nconvertENFAToNFA:\n"
