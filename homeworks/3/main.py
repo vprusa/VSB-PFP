@@ -124,26 +124,33 @@ class ImmutableArray:
 
     # Enumerator - a way to go through the array and get all values.
     def enumerate(self, node):
-        result = []
         if isinstance(node, Triple):
             res_left = self.enumerate(node.data[0])
             res_middle = self.enumerate(node.data[1])
             res_right = self.enumerate(node.data[2])
             res = list()
-            if res_left is not None:
-                res = res.extend(res_left)
-            if res_middle is not None:
-                res.extend(res_middle)
-            if res_right is not None:
-                res.extend(res_right)
+            res = res.extend(res_left)
+            res.extend(res_middle)
+            res.extend(res_right)
             return res
         else:
-            return [node]
+            if not node:
+                return []
+            else:
+                return [node]
 
     # Set method - a way, ho to change a value in the array based on its index.
     # While it is an immutable array, this method needs to return the new array that accommodated the change.
     def set_value(self, index, value, old_data):
         # copy-past as much from the datastructure as possible
+        # steps:
+        # find index's highest location in tree structure
+        # For each previous index copy-past the value to new tree
+        # Last value to be copy-pasted will be the new
+        # Create new array of same size with previous data (except new subtree...)
+        # - set new subtree as new data node
+        # - reuse old data that do not rely on the new change
+
         return
 #
 # # Example usage:
