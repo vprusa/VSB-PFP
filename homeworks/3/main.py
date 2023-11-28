@@ -124,14 +124,21 @@ class ImmutableArray:
 
     # Enumerator - a way to go through the array and get all values.
     def enumerate(self, node):
-        return node
-        # if not node:
-        #     return
-        # for child in node:
-        #     if isinstance(child, Triple):
-        #         yield from self._enumerate(child.data)
-        #     else:
-        #         yield child
+        result = []
+        if isinstance(node, Triple):
+            res_left = self.enumerate(node.data[0])
+            res_middle = self.enumerate(node.data[1])
+            res_right = self.enumerate(node.data[2])
+            res = list()
+            if res_left is not None:
+                res = res.extend(res_left)
+            if res_middle is not None:
+                res.extend(res_middle)
+            if res_right is not None:
+                res.extend(res_right)
+            return res
+        else:
+            return [node]
 
     # Set method - a way, ho to change a value in the array based on its index.
     # While it is an immutable array, this method needs to return the new array that accommodated the change.
