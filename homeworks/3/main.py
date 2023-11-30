@@ -59,45 +59,37 @@ class ImmutableArray:
     # TODO also fill with data
     # Constructor - a way to define an array of given size n (an array to store n values).
     def _build_array(self, size, data=None):
-        # TODO redundant size = len(data)
-        # self.size = size
         if size == 0:
             return []
         elif 1 <= size <= 3:
-            if not data:
-                return Triple(None, None, None)
-            elif len(data) > 2:
+            if len(data) > 2:
                 return Triple(data[0], data[1], data[2])
+            elif len(data) > 1:
+                return Triple(data[0], data[1], None)
+            else:
+                return data[0]
+        elif 4 == size:
+            left = self._build_array(2, data[0:2])
+            return Triple(left, data[2], data[3])
+        elif 5 == size:
+            left = self._build_array(3, data[0:3])
+            return Triple(left, data[3], data[4])
         else:
             split_size = size // 3
             split_size_rest = size % 3
             left_size = split_size + split_size_rest
-            if not data:
-                left = self._build_array(left_size)
-            else:
-                left = self._build_array(left_size, data[0:left_size])
+
+            left = self._build_array(left_size, data[0:left_size])
             if size >= 6:
-                if not data:
-                    middle = self._build_array(split_size)
-                else:
-                    middle = self._build_array(split_size, data[left_size:(left_size + split_size)])
+                middle = self._build_array(split_size,
+                                           data[left_size:(left_size + split_size)])
             else:
-                if not data:
-                    middle = None
-                else:
-                    middle = data[1]
+                middle = data[1]
             if size >= 9:
-                # right = self._build_array(split_size)
-                if not data:
-                    right = self._build_array(split_size)
-                else:
-                    right = self._build_array(split_size, data[(left_size + split_size):])
+                right = self._build_array(split_size, data[(left_size + split_size):])
 
             else:
-                if not data:
-                    right = None
-                else:
-                    right = data[2]
+                right = data[2]
             return [Triple(left, middle, right)]
 
     # Indexer - a way how to get a value defined by its index (in range 0..n-1).
@@ -158,12 +150,53 @@ class ImmutableArray:
     # While it is an immutable array, this method needs to return the new array
     # that accommodated the change.
     def set_value(self, index, value):
-        new_data = self._set_value(index, value, node=self._data[0], size=self.size)
+        found, new_data = self._set_value(index, value, node=self._data[0], size=self.size)
         new_arr = ImmutableArray(self.size, new_data)
         return new_arr
 
+    def _set_value(self, index, value, node=None, level=0, size=None):
+        if index > size:
+            raise IndexError(f"Index {index} out of range {self.size} for the array.")
+        if isinstance(node, Triple):
+            divider = 3
+            split_size = size // divider
+            split_size_rest = size % divider
+            left_index_max = split_size + split_size_rest
+            middle_index_max = split_size * 2
+            next_level = level + 1
+            left = node.data[0]
+            middle = node.data[1]
+            right = node.data[2]
+            if left_index_max > index:
+                found, new_data = self._set_value(index, value, left, next_level, left_index_max, )
+                if found:
+                    res = Triple(new_data, middle, right)
+                else:
+                    res = node
+                return found, res
+            elif middle_index_max > index:
+                found, new_data = self._set_value(left_index_max - index, value, middle, next_level, split_size)
+                if found:
+                    res = Triple(left, new_data, right)
+                else:
+                    res = node
+                return found, res
+                # return self.get_value(left_index_max - index, node.data[1])
+                # return self._set_value(index - left_index_max, middle, next_level, split_size)
+            else:
+                found, new_data = self._set_value(left_index_max-index, value, right, next_level, split_size)
+                if found:
+                    res = Triple(left, middle, new_data)
+                else:
+                    res = node
+                return found, res
+                # return self.get_value(left_index_max-index, node.data[2])
+                # return self._set_value(index - middle_index_max, right, next_level, split_size)
+        else:
+            return True, value
 
-    def _set_value(self, index, value, node=None, size=0):
+    def _set_value2(self, index, value, node=None, size=0):
+        # for each triplet
         split_size = size // 3
         split_size_rest = size % 3
         left_index_max = split_size + split_size_rest
@@ -189,6 +222,32 @@ class ImmutableArray:
             return value
         pass
 
+
+    # def _set_value(self, index, value, node=None, size=0):
+    #     split_size = size // 3
+    #     split_size_rest = size % 3
+    #     left_index_max = split_size + split_size_rest
+    #     middle_index_max = split_size * 2
+    #     if isinstance(node, Triple):
+    #         left = node.data[0]
+    #         middle = node.data[1]
+    #         right = node.data[2]
+    #         if left_index_max > index:
+    #             old_data = self._enumerate(node.data[0])
+    #             old_data[index] = value
+    #             left = self._build_array(len(old_data), old_data)
+    #         elif middle_index_max > index:
+    #             old_data = self._enumerate(node.data[1])
+    #             old_data[index - left_index_max] = value
+    #             middle = self._build_array(len(old_data), old_data)
+    #         else:
+    #             old_data = self._enumerate(node.data[2])
+    #             old_data[index - middle_index_max] = value
+    #             right = self._build_array(len(old_data), old_data)
+    #         return Triple(left, middle, right)
+    #     else:
+    #         return value
+    #     pass
     def copy_node(self, node, ):
         self._build_array()
 

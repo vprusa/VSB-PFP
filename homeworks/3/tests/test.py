@@ -24,45 +24,46 @@ class TestImmutableArray(unittest.TestCase):
         immutable_array = ImmutableArray(size)
         self.assertEqual(immutable_array.levels, 2)
 
-    def test_create_for_four_elements(self):
+    def test_create_for_9_elements(self):
         size = 9
         immutable_array = ImmutableArray(size)
         self.assertEqual(immutable_array.levels, 2)
 
-    def test_create_for_four_elements(self):
-        size = 10
-        immutable_array = ImmutableArray(size)
+    def test_create_for_10_elements(self):
+        stubs = list(range(1, 11))
+        size = len(stubs)
+        immutable_array = ImmutableArray(size, stubs)
         self.assertEqual(immutable_array.levels, 3)
 
-    def test_create_for_four_elements(self):
+    def test_create_for_16_elements(self):
         size = 16
         immutable_array = ImmutableArray(size)
         self.assertEqual(immutable_array.levels, 3)
 
 
-    def test_create_for_four_elements(self):
+    def test_create_for_27_elements(self):
         size = 27
         immutable_array = ImmutableArray(size)
         self.assertEqual(immutable_array.levels, 3)
 
-    def test_create_for_four_elements(self):
+    def test_create_for_28_elements(self):
         size = 28
         immutable_array = ImmutableArray(size)
         self.assertEqual(immutable_array.levels, 3)
 
 
-    def test_create_for_four_elements(self):
+    def test_create_for_30_elements(self):
         size = 30
         immutable_array = ImmutableArray(size)
         self.assertEqual(immutable_array.levels, 4)
 
 
-    def test_create_for_four_elements(self):
+    def test_create_for_31_elements(self):
         size = 31
         immutable_array = ImmutableArray(size)
         self.assertEqual(immutable_array.levels, 4)
 
-    def test_iter_for_four_elements(self):
+    def test_iter_for_10_elements(self):
         stubs = list(range(1, 10))
         size = len(stubs)
         immutable_array = ImmutableArray(size, data=stubs)
@@ -100,14 +101,13 @@ class TestImmutableArray(unittest.TestCase):
         data = list(range(1, 27))
         size = len(data)
         immutable_array = ImmutableArray(size, data=data)
-        self.assertEqual(immutable_array.levels, 2)
+        self.assertEqual(immutable_array.levels, 3)
         for i in data:
             new_val = i * 100
             idx = i - 1
             new_immutable_array = immutable_array.set_value(idx, new_val)
             self.assertEqual(immutable_array.get_value(idx), i)  # old value is the same
             self.assertEqual(new_immutable_array.get_value(idx), new_val)  # new value is new
-
 
 
     # def test_add_one_element(self):
