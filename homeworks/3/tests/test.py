@@ -64,11 +64,12 @@ class TestImmutableArray(unittest.TestCase):
 
     def test_iter_for_four_elements(self):
         size = 1
-        stubs = list(range(1,10))
-        immutable_array = ImmutableArray(size, stubs=stubs)
+        stubs = list(range(1, 10))
+        immutable_array = ImmutableArray(size, data=stubs)
         self.assertEqual(immutable_array.levels, 1)
-        iter = immutable_array.enumerate2()
-        iter = immutable_array.__iter__()
+        # iter = immutable_array.enumerate2()
+        iter = immutable_array.enumerate()
+        # iter = immutable_array.__iter__()
         # self.assertEqual(iter, "idk")
 
 
