@@ -44,22 +44,15 @@ class ImmutableArray:
         else:
             # print(f" [{node[0]}|{node[1]}|{node[2]}]")
             if isinstance(node, int):
-                # print(f" {node}", end='')
                 print(f"{node}", end='')
             else:
                 print(f"T")
-        # for t in self.array:
-        #     print(" ", t)
-        # for l in range(0, self.levels):
-        #     for i in range(0, 3):
-        #         print(" ")
-        # print ()
 
     # Prepare structure
     # TODO also fill with data
     # Constructor - a way to define an array of given size n (an array to store n values).
     def _build_array(self, size, data=None):
-        if size == 0:
+        if size == 0 or data is None:
             return []
         elif 1 <= size <= 3:
             if len(data) > 2:
@@ -74,12 +67,26 @@ class ImmutableArray:
         elif 5 == size:
             left = self._build_array(3, data[0:3])
             return Triple(left, data[3], data[4])
+        elif 6 == size:
+            left = self._build_array(3, data[0:3])
+            middle = self._build_array(3, data[3:])
+            return Triple(left, middle, None)
+        elif 7 == size:
+            left = self._build_array(3, data[0:3])
+            middle = self._build_array(3, data[3:5])
+            return Triple(left, middle, data[5])
+        elif 8 == size:
+            left = self._build_array(3, data[0:3])
+            middle = self._build_array(3, data[3:5])
+            right = self._build_array(3, data[5:])
+            return Triple(left, middle, right)
         else:
             split_size = size // 3
             split_size_rest = size % 3
             left_size = split_size + split_size_rest
 
             left = self._build_array(left_size, data[0:left_size])
+
             if size >= 6:
                 middle = self._build_array(split_size,
                                            data[left_size:(left_size + split_size)])
@@ -87,7 +94,6 @@ class ImmutableArray:
                 middle = data[1]
             if size >= 9:
                 right = self._build_array(split_size, data[(left_size + split_size):])
-
             else:
                 right = data[2]
             return [Triple(left, middle, right)]
@@ -139,13 +145,6 @@ class ImmutableArray:
             else:
                 return [node]
 
-    def _build_from_existing(self, el, em, er, data=None):
-        left = data if el is None else el
-        middle = data if em is None else em
-        right = data if er is None else er
-
-        return Triple(el, em, er)
-
     # Set method - a way, ho to change a value in the array based on its index.
     # While it is an immutable array, this method needs to return the new array
     # that accommodated the change.
@@ -165,10 +164,16 @@ class ImmutableArray:
             middle_index_max = split_size * 2
             next_level = level + 1
             left = node.data[0]
+            if isinstance(left, list):
+                left = left[0]
             middle = node.data[1]
+            if isinstance(middle, list):
+                middle = middle[0]
             right = node.data[2]
+            if isinstance(right, list):
+                right = right[0]
             if left_index_max > index:
-                found, new_data = self._set_value(index, value, left, next_level, left_index_max, )
+                found, new_data = self._set_value(index, value, left, next_level, left_index_max)
                 if found:
                     res = Triple(new_data, middle, right)
                 else:
