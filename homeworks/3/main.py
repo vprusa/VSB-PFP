@@ -55,6 +55,7 @@ class ImmutableArray:
     # TODO also fill with data
     # Constructor - a way to define an array of given size n (an array to store n values).
     def _build_array(self, size, data=None):
+        # TODO redundant size = len(data)
         # self.size = size
         if size == 0:
             return []
@@ -97,29 +98,31 @@ class ImmutableArray:
             return [Triple(left, middle, right)]
 
     # Indexer - a way how to get a value defined by its index (in range 0..n-1).
-    def get_value(self, index, node=None):
-        if index > self.size:
+    def get_value(self, index):
+        return self._get_value(index, self._data[0], level=1, size=self.size)
+    def _get_value(self, index, node=None, level=None, size = None):
+        if index > size:
             raise IndexError(f"Index {index} out of range {self.size} for the array.")
-        split_size = self.size // 3
-        split_size_rest = self.size % 3
-        left_index_max = split_size + split_size_rest
-        middle_index_max = split_size * 2
         if isinstance(node, Triple):
+            divider = 3
+            split_size = size // divider
+            split_size_rest = size % divider
+            left_index_max = split_size + split_size_rest
+            middle_index_max = split_size * 2
+            next_level = level + 1
             if left_index_max > index:
-                return self.get_value(left_index_max - index, node.data[0])
+                return self._get_value(index, node.data[0], next_level, left_index_max)
             elif middle_index_max > index:
-                return self.get_value(left_index_max - index, node.data[1])
+                # return self.get_value(left_index_max - index, node.data[1])
+                return self._get_value(index - left_index_max, node.data[1], next_level, split_size)
             else:
-                return self.get_value(left_index_max-index, node.data[2])
+                # return self.get_value(left_index_max-index, node.data[2])
+                return self._get_value(index - middle_index_max, node.data[2], next_level, split_size)
         else:
             return node
 
-    # def __iter__(self):
-    #     res = self.enumerate(self.array)
-    #     return res
-
     def enumerate(self):
-        res = self._enumerate(self._data).__iter__()
+        res = self._enumerate(self._data[0]).__iter__()
         return res
 
     # Enumerator - a way to go through the array and get all values.
@@ -141,33 +144,37 @@ class ImmutableArray:
             else:
                 return [node]
 
-    def _build_from_existin(self, el, em, er):
-        return ImmutableArray()
+    def _build_from_existing(self, el, em, er, data=None):
+        left = data if el is None else el
+        middle = data if em is None else em
+        right = data if er is None else er
+
+        return Triple(el, em, er)
 
     # Set method - a way, ho to change a value in the array based on its index.
-    # While it is an immutable array, this method needs to return the new array that accommodated the change.
+    # While it is an immutable array, this method needs to return the new array
+    # that accommodated the change.
     def set_value(self, index, value, old_data, node = None):
-        # copy-past as much from the datastructure as possible
-        # steps:
-        # find index's highest location in tree structure
-        # For each previous index copy-past the value to new tree
-        # Last value to be copy-pasted will be the new
-        # Create new array of same size with previous data (except new subtree...)
-        # - set new subtree as new data node
-        # - reuse old data that do not rely on the new change
-
-
         split_size = self.size // 3
         split_size_rest = self.size % 3
         left_index_max = split_size + split_size_rest
         middle_index_max = split_size * 2
         if isinstance(node, Triple):
+            left = node.data[0]
+            middle = node.data[1]
+            right = node.data[2]
             if left_index_max > index:
-                return self.get_value(left_index_max - index, node.data[0])
+                old_data = self._enumerate(node.data[0])
+                old_data[index] = value
             elif middle_index_max > index:
-                return self.get_value(left_index_max - index, node.data[1])
+                old_data = self._enumerate(node.data[1])
+                old_data[index - left_index_max] = value
+                middle = self._build_array(len(old_data), old_data)
             else:
-                return self.get_value(left_index_max-index, node.data[2])
+                old_data = self._enumerate(node.data[2])
+                old_data[index - middle_index_max] = value
+                right = self._build_array(len(old_data), old_data)
+            return Triple(left, middle, right)
         else:
             return value
         pass

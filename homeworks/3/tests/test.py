@@ -63,14 +63,26 @@ class TestImmutableArray(unittest.TestCase):
         self.assertEqual(immutable_array.levels, 4)
 
     def test_iter_for_four_elements(self):
-        size = 1
         stubs = list(range(1, 10))
+        size = len(stubs)
         immutable_array = ImmutableArray(size, data=stubs)
-        self.assertEqual(immutable_array.levels, 1)
+        self.assertEqual(immutable_array.levels, 2)
         # iter = immutable_array.enumerate2()
+        arr = immutable_array._enumerate(immutable_array._data[0])
+        # self.assertEqual(arr[0], 1)
+        # self.assertEqual(arr[1], 2)
         iter = immutable_array.enumerate()
-        # iter = immutable_array.__iter__()
-        # self.assertEqual(iter, "idk")
+        self.assertEqual(next(iter), 1)
+        self.assertEqual(next(iter), 2)
+
+    def test_get_nth_element(self):
+        data = list(range(1, 10))
+        size = len(data)
+        immutable_array = ImmutableArray(size, data=data)
+        self.assertEqual(immutable_array.levels, 2)
+        self.assertEqual(immutable_array.get_value(0), 1)
+        self.assertEqual(immutable_array.get_value(1), 2)
+        self.assertEqual(immutable_array.get_value(9), 9)
 
 
 
