@@ -8,7 +8,11 @@ class Triple:
 class ImmutableArray:
     def __init__(self, size, data=None):
         self.size = size
-        self._data = self._build_array(size, data)
+        if isinstance(data, Triple):
+            self._data = list()
+            self._data.append(data)
+        else:
+            self._data = self._build_array(size, data)
         self.levels = self._calc_levels(size)
 
     def _calc_levels(self, size):
@@ -67,7 +71,6 @@ class ImmutableArray:
         else:
             split_size = size // 3
             split_size_rest = size % 3
-            # left = self._build_array(split_size + split_size_rest, stubs)
             left_size = split_size + split_size_rest
             if not data:
                 left = self._build_array(left_size)
@@ -154,9 +157,15 @@ class ImmutableArray:
     # Set method - a way, ho to change a value in the array based on its index.
     # While it is an immutable array, this method needs to return the new array
     # that accommodated the change.
-    def set_value(self, index, value, old_data, node = None):
-        split_size = self.size // 3
-        split_size_rest = self.size % 3
+    def set_value(self, index, value):
+        new_data = self._set_value(index, value, node=self._data[0], size=self.size)
+        new_arr = ImmutableArray(self.size, new_data)
+        return new_arr
+
+
+    def _set_value(self, index, value, node=None, size=0):
+        split_size = size // 3
+        split_size_rest = size % 3
         left_index_max = split_size + split_size_rest
         middle_index_max = split_size * 2
         if isinstance(node, Triple):
@@ -166,6 +175,7 @@ class ImmutableArray:
             if left_index_max > index:
                 old_data = self._enumerate(node.data[0])
                 old_data[index] = value
+                left = self._build_array(len(old_data), old_data)
             elif middle_index_max > index:
                 old_data = self._enumerate(node.data[1])
                 old_data[index - left_index_max] = value
