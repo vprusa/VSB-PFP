@@ -76,38 +76,38 @@ class TestImmutableArray(unittest.TestCase):
         self.assertEqual(next(iter), 1)
         self.assertEqual(next(iter), 2)
 
-    # def test_get_nth_element(self):
-    #     data = list(range(1, 10))
-    #     size = len(data)
-    #     immutable_array = ImmutableArray(size, data=data)
-    #     self.assertEqual(immutable_array.levels, 2)
-    #     self.assertEqual(immutable_array.get_value(0), 1)
-    #     self.assertEqual(immutable_array.get_value(1), 2)
-    #     self.assertEqual(immutable_array.get_value(9), 9)
+    def test_get_nth_element(self):
+        data = list(range(1, 10))
+        size = len(data)
+        immutable_array = ImmutableArray(size, data=data)
+        self.assertEqual(immutable_array.levels, 2)
+        self.assertEqual(immutable_array.get_value(0), 1)
+        self.assertEqual(immutable_array.get_value(1), 2)
+        self.assertEqual(immutable_array.get_value(9), 9)
 
-    # def test_set_nth_element(self):
-    #     data = list(range(1, 10))
-    #     size = len(data)
-    #     immutable_array = ImmutableArray(size, data=data)
-    #     self.assertEqual(immutable_array.levels, 2)
-    #     for i in data:
-    #         new_val = i * 100
-    #         idx = i - 1
-    #         new_immutable_array = immutable_array.set_value(idx, new_val)
-    #         self.assertEqual(immutable_array.get_value(idx), i)  # old value is the same
-    #         self.assertEqual(new_immutable_array.get_value(idx), new_val)  # new value is new
+    def test_set_nth_element(self):
+        data = list(range(1, 10))
+        size = len(data)
+        immutable_array = ImmutableArray(size, data=data)
+        self.assertEqual(immutable_array.levels, 2)
+        for i in range(5, 10): #data:
+            new_val = i * 100
+            idx = i - 1
+            new_immutable_array = immutable_array.set_value(idx, new_val)
+            self.assertEqual(immutable_array.get_value(idx), i)  # old value is the same
+            self.assertEqual(new_immutable_array.get_value(idx), new_val)  # new value is new
 
-    # def test_set_nth_element_of_3_level_data_structure(self):
-    #     data = list(range(1, 27))
-    #     size = len(data)
-    #     immutable_array = ImmutableArray(size, data=data)
-    #     self.assertEqual(immutable_array.levels, 3)
-    #     for i in data:
-    #         new_val = i * 100
-    #         idx = i - 1
-    #         new_immutable_array = immutable_array.set_value(idx, new_val)
-    #         self.assertEqual(immutable_array.get_value(idx), i)  # old value is the same
-    #         self.assertEqual(new_immutable_array.get_value(idx), new_val)  # new value is new
+    def test_set_nth_element_of_3_level_data_structure(self):
+        data = list(range(1, 27))
+        size = len(data)
+        immutable_array = ImmutableArray(size, data=data)
+        self.assertEqual(immutable_array.levels, 3)
+        for i in data:
+            new_val = i * 100
+            idx = i - 1
+            new_immutable_array = immutable_array.set_value(idx, new_val)
+            self.assertEqual(immutable_array.get_value(idx), i)  # old value is the same
+            self.assertEqual(new_immutable_array.get_value(idx), new_val)  # new value is new
 
 
     # def test_add_one_element(self):

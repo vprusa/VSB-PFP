@@ -180,7 +180,8 @@ class ImmutableArray:
                     res = node
                 return found, res
             elif middle_index_max > index:
-                found, new_data = self._set_value(left_index_max - index, value, middle, next_level, split_size)
+                found, new_data = self._set_value(index - left_index_max,
+                                                  value, middle, next_level, split_size)
                 if found:
                     res = Triple(left, new_data, right)
                 else:
@@ -189,7 +190,7 @@ class ImmutableArray:
                 # return self.get_value(left_index_max - index, node.data[1])
                 # return self._set_value(index - left_index_max, middle, next_level, split_size)
             else:
-                found, new_data = self._set_value(left_index_max-index, value, right, next_level, split_size)
+                found, new_data = self._set_value(index-middle_index_max, value, right, next_level, split_size)
                 if found:
                     res = Triple(left, middle, new_data)
                 else:
