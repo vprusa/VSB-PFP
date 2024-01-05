@@ -35,3 +35,48 @@ or just
 ```
 cabal install scotty
 ```
+
+
+### Prepare DB
+
+- install psql,
+- create user and DB named `vsb`
+
+```
+dnf install postgresql-devel -y
+# for libpq-devel-*
+
+cabal install postgresql-simple
+```
+
+
+```
+-- Define the User data type
+data User = User {
+    userId :: Int,
+    userNick :: String,
+    userEmail :: String
+} deriving (Show, Eq)
+
+-- Define the Item data type
+data Item = Item {
+    itemId :: Int,
+    itemUserId :: Int,
+    itemName :: String
+} deriving (Show, Eq)
+```
+
+```
+CREATE TABLE users (
+    user_id SERIAL PRIMARY KEY,
+    user_nick VARCHAR(255) NOT NULL,
+    user_email VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE items (
+    item_id SERIAL PRIMARY KEY,
+    item_user_id INTEGER NOT NULL,
+    item_name VARCHAR(255) NOT NULL,
+    FOREIGN KEY (item_user_id) REFERENCES users(user_id)
+);
+```

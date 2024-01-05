@@ -17,6 +17,8 @@ import qualified Data.Text.Lazy as TL
 import Data.Typeable
 import Data.Text.Lazy (Text)
 
+import Database.PostgreSQL.Simple
+
 -- Notes:
 -- https://webbureaucrat.gitlab.io/articles/writing-a-hello-world-web-app-in-haskell-with-scotty/
 -- https://hackage.haskell.org/package/scotty-0.21/docs/Web-Scotty.html
@@ -89,34 +91,94 @@ getUserId maybeUser = case maybeUser of
 itemsToStr :: [Item] -> String
 itemsToStr items = show $ map (\i -> TL.pack $ show i) items 
 
+-- update a users email based on their nick
+-- updateUserEmail :: Int -> String -> [User] -> [User]
+-- updateUserEmail userId newEmail users = map updateEmail users
+--   where
+--     updateEmail /user@(User id nick' email)
+--       | id == userId = User id nick' newEmail
+--       | otherwise = user
+
+-- update a users email based on their id
+updateUserEmail :: Int -> String -> [User] -> [User]
+updateUserEmail userId newEmail users = map updateEmail users
+  where
+    updateEmail user@(User id nick email)
+      | id == userId = User id nick newEmail
+      | otherwise = user
+
 main :: IO ()
-main = scotty 3000 $ do
+main = do
     let 
       testUsers = createTestUsers
-      testItems = concat $ createTestUsersItems testUsers -- TODO persistency?
-    get "/" $ do
-        html $ mconcat [
-          "<h1>Home Page for Users and their Carts!</h1>", 
-          "<br><a href='/users'> list all users</a>",
-          "<br><a href='/items'> list all items</a>"
+      testItems = concat $ createTestUsersItems testUsers
+
+      -- conn <- connect defaultConnectInfo {
+      conn = connect defaultConnectInfo {
+                connectHost = "localhost",   -- or your database host
+                connectDatabase = "vsb",
+                connectUser = "vsb",
+                connectPassword = "vsb"
+            }
+    
+    -- Your database operations go here
+
+    -- close conn  -- Close the connection when done
+
+
+    scotty 3000 $ do
+      get "/" $ do
+          html $ mconcat [
+            "<h1>Home Page for Users and their Carts!</h1>", 
+            "<br><a href='/users'> list all users</a>",
+            "<br><a href='/items'> list all items</a>"
+            ]
+
+      get "/users" $ do
+        html $ mconcat (map (\u -> TL.pack (show u ++ "<br>") ) testUsers)
+
+      get "/items" $ do
+        html $ mconcat (map (\i -> TL.pack (show i ++ "<br>") ) testItems)
+
+      -- http://localhost:3000/user/?name=user-1
+      get "/user/:name" $ do
+        -- name <- param "name"
+        name <- queryParam "name"
+        let userStr = TL.pack $ findUserByNameString name testUsers
+        let userId = getUserId $ findUserByName name testUsers 
+        let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId testItems -- testItems
+        html $ mconcat ["<h1>User Info</h1>", 
+          "<br>Searched Name: ", TL.pack name,
+          "<br>Found: ", userStr,  "<br>",
+          "<br>Cart items: ", userItemsStr,  "<br>"
           ]
 
-    get "/users" $ do
-      html $ mconcat (map (\u -> TL.pack (show u ++ "<br>") ) testUsers)
-
-    get "/items" $ do
-      html $ mconcat (map (\i -> TL.pack (show i ++ "<br>") ) testItems)
-
-    -- http://localhost:3000/user/?name=test
-    get "/user/:name" $ do
-      -- name <- param "name"
-      name <- queryParam "name"
-      let userStr = TL.pack $ findUserByNameString name testUsers
-      let userId = getUserId $ findUserByName name testUsers 
-      let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId testItems -- testItems
-      html $ mconcat ["<h1>User Info</h1>", 
-        "<br>Searched Name: ", TL.pack name,
-        "<br>Found: ", userStr,  "<br>",
-        "<br>Cart items: ", userItemsStr,  "<br>"
-        ]
-    
+      get "/setUser/:name" $ do
+        name <- queryParam "name"
+        let userStr = TL.pack $ findUserByNameString name testUsers
+        let userId = getUserId $ findUserByName name testUsers 
+        let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId testItems -- testItems
+        html $ mconcat ["<h1>User Info</h1>", 
+          "<br>Searched Name: ", TL.pack name,
+          "<br>Found: ", userStr,  "<br>",
+          "<br>Cart items: ", userItemsStr,  "<br>"
+          ]
+ 
+      -- http://localhost:3000/updateUserEmail/?userName=user-1&newEmail=testmail
+      -- Endpoint to update user email
+      get "/updateUserEmail/:userName:newName" $ do
+        userName <- queryParam "userName"
+        newEmail <- queryParam "newEmail"
+        -- users <- updateUsers -- liftIO $ readIORef usersRef
+        let 
+          -- newEmail = "nomail" -- queryParam "newEmail"
+          user = findUserByName userName testUsers
+          userId = getUserId user -- (findUserByName userName testUsers)
+        let 
+          updatedUsers = updateUserEmail userId newEmail testUsers 
+          newUser = findUserByName userName updatedUsers
+        -- let testUsers = findUserByName userName testUsers
+        -- liftIO $ writeIORef usersRef updatedUsers
+        html $ TL.pack $ "Updated email for old user: <br>" ++ (show user) 
+          ++ "<br> to new user:<br>" ++ (show newUser)
+      
