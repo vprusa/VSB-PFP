@@ -18,6 +18,9 @@ import Data.Typeable
 import Data.Text.Lazy (Text)
 
 import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.FromRow
+-- import Database.PostgreSQL.Simple (field)
+
 
 -- Notes:
 -- https://webbureaucrat.gitlab.io/articles/writing-a-hello-world-web-app-in-haskell-with-scotty/
@@ -99,6 +102,15 @@ itemsToStr items = show $ map (\i -> TL.pack $ show i) items
 --       | id == userId = User id nick' newEmail
 --       | otherwise = user
 
+-- getUsers :: Connection -> IO [User]
+-- getUsers conn = query_ conn "SELECT user_id, user_nick, user_email FROM users"
+
+instance FromRow User where
+    fromRow = User <$> field <*> field <*> field
+
+getUsers :: Connection -> IO [User]
+getUsers conn = query_ conn "SELECT user_id, user_nick, user_email FROM users"
+
 -- update a users email based on their id
 updateUserEmail :: Int -> String -> [User] -> [User]
 updateUserEmail userId newEmail users = map updateEmail users
@@ -109,23 +121,44 @@ updateUserEmail userId newEmail users = map updateEmail users
 
 main :: IO ()
 main = do
-    let 
-      testUsers = createTestUsers
-      testItems = concat $ createTestUsersItems testUsers
-
-      -- conn <- connect defaultConnectInfo {
-      conn = connect defaultConnectInfo {
+    conn <- connect defaultConnectInfo {
+      -- connInfo = defaultConnectInfo {
                 connectHost = "localhost",   -- or your database host
                 connectDatabase = "vsb",
                 connectUser = "vsb",
                 connectPassword = "vsb"
             }
-    
+    users <- getUsers conn
+    let 
+      -- conn <- connect defaultConnectInfo {
+   
+      -- conn 
+      -- testUsers = con
+      -- conn = (connect connInfo)
+      -- users = getUsers conn
+    -- let 
+      -- close conn
+      -- testItems = concat $ createTestUsersItems (users)
+
+      -- testUsers = createTestUsers
+      -- testItems = concat $ createTestUsersItems testUsers
     -- Your database operations go here
 
     -- close conn  -- Close the connection when done
+    -- conn <- (connect connInfo)
+    -- users <- getUsers conn
+    -- conn <- (connect connInfo)
+    -- let 
+      -- users = getUsers (connect connInfo)
+    
+      -- testUsers = users
+      testUsers =  users
+      -- testUsers = createTestUsers
+      testItems = concat $ createTestUsersItems (testUsers)
 
-
+    -- let 
+      -- close conn
+    
     scotty 3000 $ do
       get "/" $ do
           html $ mconcat [

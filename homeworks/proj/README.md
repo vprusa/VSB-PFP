@@ -80,3 +80,12 @@ CREATE TABLE items (
     FOREIGN KEY (item_user_id) REFERENCES users(user_id)
 );
 ```
+
+
+```
+
+insert into users values (1, 'user-db-1', 'user-db-1@example.org');
+insert into users values (2, 'user-db-2', 'user-db-2@example.org');
+insert into users values (3, 'user-db-3', 'user-db-3@example.org');
+
+```
