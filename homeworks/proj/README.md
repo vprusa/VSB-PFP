@@ -40,7 +40,26 @@ cabal install scotty
 ### Prepare DB
 
 - install psql,
-- create user and DB named `vsb`
+- create user and DB named `vsb`, set role, set auth with password.
+
+to `/var/lib/pgsql/data/pg_hba.conf` (or simillar depending on Arch) add:
+
+```
+local   all             all                                     md5
+host    all             all             127.0.0.1/32            md5
+```
+or smth like this...
+then use
+
+```
+    conn <- connect defaultConnectInfo {
+                -- localhost needs change in /var/lib/pgsql/data/pg_hba.conf
+                connectHost = "",  -- or your database host
+                connectDatabase = "vsb",
+                connectUser = "vsb",
+                connectPassword = "vsb"
+            }
+```
 
 ```
 dnf install postgresql-devel -y

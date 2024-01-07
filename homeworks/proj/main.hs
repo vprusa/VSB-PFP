@@ -123,7 +123,8 @@ main :: IO ()
 main = do
     conn <- connect defaultConnectInfo {
       -- connInfo = defaultConnectInfo {
-                connectHost = "localhost",   -- or your database host
+                -- localhost needs change in /var/lib/pgsql/data/pg_hba.conf
+                connectHost = "",  -- or your database host
                 connectDatabase = "vsb",
                 connectUser = "vsb",
                 connectPassword = "vsb"
@@ -166,10 +167,11 @@ main = do
             "<br><a href='/users'> list all users</a>",
             "<br><a href='/items'> list all items</a>"
             ]
-
+      -- http://localhost:3000/users
       get "/users" $ do
         html $ mconcat (map (\u -> TL.pack (show u ++ "<br>") ) testUsers)
 
+      -- http://localhost:3000/items
       get "/items" $ do
         html $ mconcat (map (\i -> TL.pack (show i ++ "<br>") ) testItems)
 
