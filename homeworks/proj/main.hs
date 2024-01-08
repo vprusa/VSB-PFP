@@ -17,10 +17,13 @@ import qualified Data.Text.Lazy as TL
 import Data.Typeable
 import Data.Text.Lazy (Text)
 
+import Control.Monad.IO.Class (liftIO)
+
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromRow
 -- import Database.PostgreSQL.Simple (field)
 
+import Data.Int (Int64)
 
 -- Notes:
 -- https://webbureaucrat.gitlab.io/articles/writing-a-hello-world-web-app-in-haskell-with-scotty/
@@ -108,8 +111,22 @@ itemsToStr items = show $ map (\i -> TL.pack $ show i) items
 instance FromRow User where
     fromRow = User <$> field <*> field <*> field
 
-getUsers :: Connection -> IO [User]
-getUsers conn = query_ conn "SELECT user_id, user_nick, user_email FROM users"
+getAllUsers :: Connection -> IO [User]
+getAllUsers conn = query_ conn "SELECT user_id, user_nick, user_email FROM users"
+
+instance FromRow Item where
+    fromRow = Item <$> field <*> field <*> field
+
+getAllItems :: Connection -> IO [Item]
+getAllItems conn = query_ conn "SELECT item_id, item_user_id, item_name FROM items"
+
+-- addItem :: Connection -> IO [Bool]
+-- addItem conn = query_ conn "INSERT INTO items VALUES (:item_id, :item_user_id, :item_name)"
+
+addItem :: Connection -> Item -> IO Int64
+addItem conn item = execute conn 
+    "INSERT INTO items (item_user_id, item_name) VALUES (?, ?)" 
+    (itemUserId item, itemName item)
 
 -- update a users email based on their id
 updateUserEmail :: Int -> String -> [User] -> [User]
@@ -129,7 +146,8 @@ main = do
                 connectUser = "vsb",
                 connectPassword = "vsb"
             }
-    users <- getUsers conn
+    testUsers <- getAllUsers conn
+    testItems <- getAllItems conn
     let 
       -- conn <- connect defaultConnectInfo {
    
@@ -153,9 +171,10 @@ main = do
       -- users = getUsers (connect connInfo)
     
       -- testUsers = users
-      testUsers =  users
+      -- testUsers =  users
       -- testUsers = createTestUsers
-      testItems = concat $ createTestUsersItems (testUsers)
+      -- testItems = concat $ createTestUsersItems (testUsers)
+      -- testItems = concat $ createTestUsersItems (testUsers)
 
     -- let 
       -- close conn
@@ -175,7 +194,7 @@ main = do
       get "/items" $ do
         html $ mconcat (map (\i -> TL.pack (show i ++ "<br>") ) testItems)
 
-      -- http://localhost:3000/user/?name=user-1
+      -- http://localhost:3000/user/?name=user-db-1
       get "/user/:name" $ do
         -- name <- param "name"
         name <- queryParam "name"
@@ -199,6 +218,30 @@ main = do
           "<br>Cart items: ", userItemsStr,  "<br>"
           ]
  
+      -- adds new item to user's cart
+      get "/addItemToCart/:userName:itemName" $ do
+        userName <- queryParam "userName"
+        itemName <- queryParam "itemName"
+        -- testUsers2 <- getAllUsers conn
+
+
+        let userStr = TL.pack $ findUserByNameString userName testUsers
+        let userId = getUserId $ findUserByName userName testUsers
+
+        let newItem = Item 0 userId itemName
+        -- TODO use as less of liftIO as possible and as close to the lowest (DB) and highest (Web) APIs
+        itemAddedRes <- liftIO $ addItem conn newItem --
+        let res = close conn --  TODO fix open and close
+        let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId testItems -- testItems
+
+        let newUserItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId testItems -- testItems
+        html $ mconcat ["<h1>User Info</h1>", 
+          "<br>Searched Name: ", TL.pack userName,
+          "<br>Found: ", userStr,  "<br>",
+          "<br>Old Cart items: ", userItemsStr,  "<br>",
+          "<br>New Cart items: ", newUserItemsStr,  "<br>"
+          ]
+          
       -- http://localhost:3000/updateUserEmail/?userName=user-1&newEmail=testmail
       -- Endpoint to update user email
       get "/updateUserEmail/:userName:newName" $ do

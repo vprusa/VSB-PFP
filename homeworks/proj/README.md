@@ -107,4 +107,66 @@ insert into users values (1, 'user-db-1', 'user-db-1@example.org');
 insert into users values (2, 'user-db-2', 'user-db-2@example.org');
 insert into users values (3, 'user-db-3', 'user-db-3@example.org');
 
+
+
+insert into items values (1, 2, 'user-db-2-item-1');
+insert into items values (2, 3, 'user-db-3-item-2');
+insert into items values (3, 3, 'user-db-3-item-3');
+insert into items values (4, 3, 'user-db-3-item-4');
+
 ```
+
+Sample curl:
+
+
+list users
+`http://localhost:3000/users`
+
+```
+User {userId = 0, userNick = "user-db-1", userEmail = "user@example.org"}
+User {userId = 1, userNick = "user-db-2", userEmail = "user-db-2@example.org"}
+User {userId = 3, userNick = "user-db-3", userEmail = "user-db-3@example.org"}
+```
+
+list items
+`http://localhost:3000/items`
+
+```
+Item {itemId = 1, itemUserId = 0, itemName = "Item1"}
+Item {itemId = 2, itemUserId = 0, itemName = "Item2"}
+Item {itemId = 1, itemUserId = 1, itemName = "Item1"}
+Item {itemId = 2, itemUserId = 1, itemName = "Item2"}
+Item {itemId = 1, itemUserId = 3, itemName = "Item1"}
+Item {itemId = 2, itemUserId = 3, itemName = "Item2"}
+```
+
+show user detail with items
+`http://localhost:3000/user/?name=user-db-2`
+
+```
+User Info
+
+Searched Name: user-db-2
+Found: Just (User {userId = 1, userNick = "user-db-2", userEmail = "user-db-2@example.org"})
+
+Cart items: ["Item {itemId = 1, itemUserId = 1, itemName = \"user-db-2-item-1\"}"]
+```
+
+add user
+``
+
+add item to user
+`http://localhost:3000/addItemToCart/?userName=user-db-3&itemName=test-user-db-1-item-1`
+
+```
+TODO
+```
+
+remove user
+``
+
+remove item for user
+``
+
+
+#
