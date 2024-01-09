@@ -18,11 +18,11 @@ import Data.Typeable
 import Data.Text.Lazy (Text)
 
 import Control.Monad.IO.Class (liftIO)
-
+import Data.Maybe (listToMaybe)
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromRow
 -- import Database.PostgreSQL.Simple (field)
-
+import Data.List (intercalate)
 import Data.Int (Int64)
 
 -- Notes:
@@ -118,10 +118,49 @@ deleteUser :: Connection -> Int -> IO Int64
 deleteUser conn userId = 
   execute conn "DELETE FROM users WHERE user_id = ?" (Only userId)
 
-addUser :: Connection -> User -> IO Int64
-addUser conn user = execute conn 
-    "INSERT INTO users (user_nick, user_email) VALUES (?, ?)" 
-    (userNick user, userEmail user)
+addUser :: Connection -> String -> String -> IO Int64
+-- addUser conn userNick userEmail = execute conn "INSERT INTO users (user_nick, user_email) VALUES (?, ?)" (userNick, userEmail)
+-- addUser conn userNick userEmail = execute conn "BEGIN ; INSERT INTO users (user_nick, user_email) VALUES (?, ?); COMMIT;" (userNick, userEmail)
+-- addUser conn userNick userEmail = do
+--   let beg = execute conn "BEGIN;" ()
+--   let res = execute conn "INSERT INTO users (user_nick, user_email) VALUES (?, ?)" (userNick, userEmail)
+--   let com = execute conn "COMMIT" ()
+--   res 
+addUser conn userNick userEmail = do
+  let beg = execute_ conn "BEGIN;"
+  let res = execute conn "INSERT INTO users (user_nick, user_email) VALUES (?, ?)" (userNick, userEmail)
+  let com = execute_ conn "COMMIT"
+  res 
+
+-- addUser2 :: Connection -> String -> String -> IO  [Maybe Int64]
+-- addUser2 conn userNick userEmail =
+  -- let beg = execute_ conn "BEGIN;"
+  -- let res = execute conn "INSERT INTO users (user_nick, user_email) VALUES (?, ?)" (userNick, userEmail)
+  -- let com = execute_ conn "COMMIT"
+  -- res 
+  -- let res = execute conn "INSERT INTO users (user_nick, user_email) VALUES (?, ?);" (userNick, userEmail)
+  -- let res = execute conn "INSERT INTO users (user_nick, user_email) VALUES ('', '');" (userNick, userEmail)
+  -- let beg = execute_ conn "BEGIN;"
+  -- let res = execute_ conn "INSERT INTO users (user_id, user_nick, user_email) VALUES (10,'idk', 'idk2');"
+  -- let com = execute_ conn "COMMIT;"
+  -- res 
+  -- let res = execute_ conn "BEGIN; INSERT INTO users (user_id, user_nick, user_email) VALUES (10,'idk', 'idk2');COMMIT;"
+  -- query conn "INSERT INTO users (user_id, user_nick, user_email) VALUES (10,'idk', 'idk2') RETURNING id;"
+
+addUser3 :: Connection -> String -> String -> IO [Int64]
+addUser3 conn userNick userEmail = do
+    -- let beg = execute_ conn "BEGIN;"
+    -- let result = query conn  "INSERT INTO users (user_id, user_nick, user_email) VALUES (10,'idk', 'idk2') RETURNING id;" (userNick, userEmail)
+    -- let com = execute_ conn "COMMIT"
+    -- -- return $ fmap (\(Only id) -> id) $ listToMaybe result
+    -- return $ ((\ (Only id) -> id) <$> listToMaybe result)
+    -- return $ map (\(Only id) -> id) result
+    let beg = execute_ conn ""
+    let result = query conn  "BEGIN; INSERT INTO users (user_id, user_nick, user_email) VALUES (10,'idk', 'idk2') RETURNING id;" (userNick, userEmail)
+    let com = execute_ conn "COMMIT"
+    
+    res <- result
+    return $ map (\(Only id) -> id) res
 
 instance FromRow Item where
     fromRow = Item <$> field <*> field <*> field
@@ -151,10 +190,26 @@ updateUserEmail userId newEmail users = map updateEmail users
       | id == userId = User id nick newEmail
       | otherwise = user
 
+
+listOfIntsToString :: IO [Int64] -> IO String
+listOfIntsToString ioInt64s = do
+    int64s <- ioInt64s  -- Extract the list of Int64 from IO
+    -- Now 'int64s' is a list of Int64 ([Int64])
+    let stringRepresentation = map show int64s
+    return $ unwords stringRepresentation
+
+intToString :: IO Int64 -> IO String
+intToString ioInt64s = do
+    int64s <- ioInt64s  -- Extract the list of Int64 from IO
+    -- Now 'int64s' is a list of Int64 ([Int64])
+    let stringRepresentation = show int64s
+    return $ stringRepresentation
+
+
 main :: IO ()
 main = do
-    conn <- connect (defaultConnectInfo {
-    -- connInfo <- (defaultConnectInfo {
+    -- conn <- connect (defaultConnectInfo {
+    let connInfo = (defaultConnectInfo {
       -- connInfo = defaultConnectInfo {
                 -- localhost needs change in /var/lib/pgsql/data/pg_hba.conf
                 connectHost = "",  -- or your database host
@@ -162,6 +217,8 @@ main = do
                 connectUser = "vsb",
                 connectPassword = "vsb"
             })
+    conn <- connect connInfo
+
     -- testUsers <- getAllUsers conn
     -- testItems <- getAllItems conn
 
@@ -201,22 +258,35 @@ main = do
           ]
 
       -- user
-      get "/addUser/:name:email" $ do
-        -- name <- queryParam "name"
-        -- name <- queryParam "name"
+      get "/addUser/:name&:email" $ do
         userEmail <- queryParam "email"
         uname <- queryParam "name"
 
-        let addRes = addUser conn (User 0 uname userEmail)
+        -- conn2 <- liftIO $ connect connInfo
 
+        -- let addRes = addUser conn2 uname userEmail
+        -- let addRes = addUser3 conn uname userEmail
+        let addRes = addUser conn uname userEmail
+        let text = liftIO $ intToString addRes
+        result <- liftIO text
+        -- let rr = tt $ pack result
         allUsers <- liftIO $ getAllUsers conn 
         allItems <- liftIO $ getAllItems conn 
 
         let userStr = TL.pack $ findUserByNameString uname allUsers
         let userId = getUserId $ findUserByName uname allUsers 
         let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId allItems
+        -- let idk =  addRes
+        -- let res = close conn2
         let res = close conn
-        html $ mconcat ["<h1>AddedUser Info</h1>", 
+        -- int64ListToString list = intercalate ", " (map show list)
+        html $ mconcat ["<h1>AddedUser Info</h1>",
+          -- "<br>Res: ", addRes,
+          -- "<br>Res: ", TL.pack $ show $ liftIO $ addRes,
+          -- "<br>Res: ", TL.pack $ map show (liftIO $ addRes),
+          -- "<br>Res: ", TL.pack $ intercalate ", " (map  (show $ liftIO) addRes),
+          -- "<br>Res: ", TL.pack $ intercalate ", " (map  (show $ liftIO) addRes),
+          "<br>Res: ", TL.pack $ show $ result,
           "<br>Searched Name: ", TL.pack uname,
           "<br>Found: ", userStr,  "<br>",
           "<br>Cart items: ", userItemsStr,  "<br>"
@@ -233,8 +303,8 @@ main = do
         allItems <- liftIO $ getAllItemsForUser conn userId
         let resDelItems = map ( \item itemId itemUserId itemName -> deleteItem itemName itemUserId) allItems
         let resDelUser = deleteUser conn userId
-        let res = close conn
-        html $ mconcat ["<h1>User Info</h1>", 
+        -- let res = close conn
+        html $ mconcat ["<h1>Detele User Info</h1>", 
           "<br>Searched Name: ", TL.pack name,
           "<br>Deleted: ", userStr,  "<br>"
           ]

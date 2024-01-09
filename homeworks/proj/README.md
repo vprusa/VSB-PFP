@@ -152,8 +152,16 @@ Found: Just (User {userId = 1, userNick = "user-db-2", userEmail = "user-db-2@ex
 Cart items: ["Item {itemId = 1, itemUserId = 1, itemName = \"user-db-2-item-1\"}"]
 ```
 
+
 add user
-``
+`http://localhost:3000/addUser/?name=user-db-test&email=user-db-test@test.test`
+```
+```
+
+delete user
+`http://localhost:3000/deleteUser/?name=user-db-1`
+```
+```
 
 add item to user
 `http://localhost:3000/addItemToCart/?userName=user-db-3&itemName=test-user-db-1-item-1`
