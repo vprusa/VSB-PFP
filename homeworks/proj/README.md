@@ -163,11 +163,11 @@ add item to user
 TODO
 ```
 
-remove user
-``
+delete user
+`http://localhost:3000/deleteUser/?name=user-db-1`
 
 remove item for user
-``
+`http://localhost:3000/deleteItemFromCart/?name=user-db-3&itemName=test-user-db-1-item-3`
 
 
 #

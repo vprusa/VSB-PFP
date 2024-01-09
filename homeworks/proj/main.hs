@@ -118,10 +118,10 @@ deleteUser :: Connection -> Int -> IO Int64
 deleteUser conn userId = 
   execute conn "DELETE FROM users WHERE user_id = ?" (Only userId)
 
-addUser :: Connection -> Item -> IO Int64
-addUser conn item = execute conn 
+addUser :: Connection -> User -> IO Int64
+addUser conn user = execute conn 
     "INSERT INTO users (user_nick, user_email) VALUES (?, ?)" 
-    (itemUserId item, itemName item)
+    (userNick user, userEmail user)
 
 instance FromRow Item where
     fromRow = Item <$> field <*> field <*> field
@@ -201,17 +201,23 @@ main = do
           ]
 
       -- user
-      get "/addUser/:name:mail" $ do
-        name <- queryParam "name"
+      get "/addUser/:name:email" $ do
+        -- name <- queryParam "name"
+        -- name <- queryParam "name"
+        userEmail <- queryParam "email"
+        uname <- queryParam "name"
+
+        let addRes = addUser conn (User 0 uname userEmail)
+
         allUsers <- liftIO $ getAllUsers conn 
         allItems <- liftIO $ getAllItems conn 
 
-        let userStr = TL.pack $ findUserByNameString name allUsers
-        let userId = getUserId $ findUserByName name allUsers 
+        let userStr = TL.pack $ findUserByNameString uname allUsers
+        let userId = getUserId $ findUserByName uname allUsers 
         let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId allItems
         let res = close conn
         html $ mconcat ["<h1>AddedUser Info</h1>", 
-          "<br>Searched Name: ", TL.pack name,
+          "<br>Searched Name: ", TL.pack uname,
           "<br>Found: ", userStr,  "<br>",
           "<br>Cart items: ", userItemsStr,  "<br>"
           ]
