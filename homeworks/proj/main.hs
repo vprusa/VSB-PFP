@@ -114,19 +114,34 @@ instance FromRow User where
 getAllUsers :: Connection -> IO [User]
 getAllUsers conn = query_ conn "SELECT user_id, user_nick, user_email FROM users"
 
+deleteUser :: Connection -> Int -> IO Int64
+deleteUser conn userId = 
+  execute conn "DELETE FROM users WHERE user_id = ?" (Only userId)
+
+addUser :: Connection -> Item -> IO Int64
+addUser conn item = execute conn 
+    "INSERT INTO users (user_nick, user_email) VALUES (?, ?)" 
+    (itemUserId item, itemName item)
+
 instance FromRow Item where
     fromRow = Item <$> field <*> field <*> field
 
 getAllItems :: Connection -> IO [Item]
 getAllItems conn = query_ conn "SELECT item_id, item_user_id, item_name FROM items"
 
--- addItem :: Connection -> IO [Bool]
--- addItem conn = query_ conn "INSERT INTO items VALUES (:item_id, :item_user_id, :item_name)"
+
+getAllItemsForUser :: Connection -> Int -> IO [Item]
+getAllItemsForUser conn userId = 
+  query conn "SELECT item_id, item_user_id, item_name FROM items WHERE item_user_id = ?" (Only userId)
+
+
+deleteItem :: Connection -> String -> Int -> IO Int64
+deleteItem conn itemName userId = 
+  execute conn "DELETE FROM items WHERE item_name = ? AND item_user_id = ?" (itemName, userId)
 
 addItem :: Connection -> Item -> IO Int64
 addItem conn item = execute conn 
-    "INSERT INTO items (item_user_id, item_name) VALUES (?, ?)" 
-    (itemUserId item, itemName item)
+    "INSERT INTO items (item_user_id, item_name) VALUES (?, ?)"  (itemUserId item, itemName item)
 
 -- update a users email based on their id
 updateUserEmail :: Int -> String -> [User] -> [User]
@@ -138,47 +153,18 @@ updateUserEmail userId newEmail users = map updateEmail users
 
 main :: IO ()
 main = do
-    conn <- connect defaultConnectInfo {
+    conn <- connect (defaultConnectInfo {
+    -- connInfo <- (defaultConnectInfo {
       -- connInfo = defaultConnectInfo {
                 -- localhost needs change in /var/lib/pgsql/data/pg_hba.conf
                 connectHost = "",  -- or your database host
                 connectDatabase = "vsb",
                 connectUser = "vsb",
                 connectPassword = "vsb"
-            }
-    testUsers <- getAllUsers conn
-    testItems <- getAllItems conn
-    let 
-      -- conn <- connect defaultConnectInfo {
-   
-      -- conn 
-      -- testUsers = con
-      -- conn = (connect connInfo)
-      -- users = getUsers conn
-    -- let 
-      -- close conn
-      -- testItems = concat $ createTestUsersItems (users)
+            })
+    -- testUsers <- getAllUsers conn
+    -- testItems <- getAllItems conn
 
-      -- testUsers = createTestUsers
-      -- testItems = concat $ createTestUsersItems testUsers
-    -- Your database operations go here
-
-    -- close conn  -- Close the connection when done
-    -- conn <- (connect connInfo)
-    -- users <- getUsers conn
-    -- conn <- (connect connInfo)
-    -- let 
-      -- users = getUsers (connect connInfo)
-    
-      -- testUsers = users
-      -- testUsers =  users
-      -- testUsers = createTestUsers
-      -- testItems = concat $ createTestUsersItems (testUsers)
-      -- testItems = concat $ createTestUsersItems (testUsers)
-
-    -- let 
-      -- close conn
-    
     scotty 3000 $ do
       get "/" $ do
           html $ mconcat [
@@ -188,75 +174,136 @@ main = do
             ]
       -- http://localhost:3000/users
       get "/users" $ do
-        html $ mconcat (map (\u -> TL.pack (show u ++ "<br>") ) testUsers)
+        -- conn <- connect connInfo
+        allUsers <- liftIO $ getAllUsers conn 
+        html $ mconcat (map (\u -> TL.pack (show u ++ "<br>") ) allUsers)
 
       -- http://localhost:3000/items
       get "/items" $ do
-        html $ mconcat (map (\i -> TL.pack (show i ++ "<br>") ) testItems)
+        allItems <- liftIO $ getAllItems conn 
+        html $ mconcat (map (\i -> TL.pack (show i ++ "<br>") ) allItems)
 
       -- http://localhost:3000/user/?name=user-db-1
       get "/user/:name" $ do
         -- name <- param "name"
         name <- queryParam "name"
-        let userStr = TL.pack $ findUserByNameString name testUsers
-        let userId = getUserId $ findUserByName name testUsers 
-        let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId testItems -- testItems
+        allUsers <- liftIO $ getAllUsers conn 
+        allItems <- liftIO $ getAllItems conn 
+
+        let userStr = TL.pack $ findUserByNameString name allUsers
+        let userId = getUserId $ findUserByName name allUsers
+        let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId allItems
+        let res = close conn
         html $ mconcat ["<h1>User Info</h1>", 
           "<br>Searched Name: ", TL.pack name,
           "<br>Found: ", userStr,  "<br>",
           "<br>Cart items: ", userItemsStr,  "<br>"
           ]
 
-      get "/setUser/:name" $ do
+      -- user
+      get "/addUser/:name:mail" $ do
         name <- queryParam "name"
-        let userStr = TL.pack $ findUserByNameString name testUsers
-        let userId = getUserId $ findUserByName name testUsers 
-        let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId testItems -- testItems
-        html $ mconcat ["<h1>User Info</h1>", 
+        allUsers <- liftIO $ getAllUsers conn 
+        allItems <- liftIO $ getAllItems conn 
+
+        let userStr = TL.pack $ findUserByNameString name allUsers
+        let userId = getUserId $ findUserByName name allUsers 
+        let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId allItems
+        let res = close conn
+        html $ mconcat ["<h1>AddedUser Info</h1>", 
           "<br>Searched Name: ", TL.pack name,
           "<br>Found: ", userStr,  "<br>",
           "<br>Cart items: ", userItemsStr,  "<br>"
           ]
- 
+          
+      -- http://localhost:3000/deleteUser/?name=user-db-1
+      get "/deleteUser/:name" $ do
+        -- name <- param "name"
+        name <- queryParam "name"
+        allUsers <- liftIO $ getAllUsers conn 
+
+        let userStr = TL.pack $ findUserByNameString name allUsers
+        let userId = getUserId $ findUserByName name allUsers
+        allItems <- liftIO $ getAllItemsForUser conn userId
+        let resDelItems = map ( \item itemId itemUserId itemName -> deleteItem itemName itemUserId) allItems
+        let resDelUser = deleteUser conn userId
+        let res = close conn
+        html $ mconcat ["<h1>User Info</h1>", 
+          "<br>Searched Name: ", TL.pack name,
+          "<br>Deleted: ", userStr,  "<br>"
+          ]
+
       -- adds new item to user's cart
       get "/addItemToCart/:userName:itemName" $ do
         userName <- queryParam "userName"
         itemName <- queryParam "itemName"
-        -- testUsers2 <- getAllUsers conn
+        allUsers <- liftIO $ getAllUsers conn 
+        allItems <- liftIO $ getAllItems conn 
 
+        -- hammer solution
+        let userStr = TL.pack $ findUserByNameString userName allUsers
+        let userId = getUserId $ findUserByName userName allUsers
 
-        let userStr = TL.pack $ findUserByNameString userName testUsers
-        let userId = getUserId $ findUserByName userName testUsers
-
+        let oldUserItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId allItems -- testItems
         let newItem = Item 0 userId itemName
-        -- TODO use as less of liftIO as possible and as close to the lowest (DB) and highest (Web) APIs
-        itemAddedRes <- liftIO $ addItem conn newItem --
-        let res = close conn --  TODO fix open and close
-        let userItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId testItems -- testItems
+        itemAddedRes <- liftIO $ addItem conn newItem
+        allNewItems <- liftIO $ getAllItems conn 
+        let res = close conn
+        let newUserItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId allNewItems -- testItems
 
-        let newUserItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId testItems -- testItems
         html $ mconcat ["<h1>User Info</h1>", 
           "<br>Searched Name: ", TL.pack userName,
           "<br>Found: ", userStr,  "<br>",
-          "<br>Old Cart items: ", userItemsStr,  "<br>",
+          "<br>Old Cart items: ", oldUserItemsStr,  "<br>",
           "<br>New Cart items: ", newUserItemsStr,  "<br>"
           ]
+
+
+      -- adds new item to user's cart
+      get "/deleteItemFromCart/:userName:itemName" $ do
+        userName <- queryParam "userName"
+        itemName <- queryParam "itemName"
+        allUsers <- liftIO $ getAllUsers conn 
+
+        -- hammer solution
+        let userStr = TL.pack $ findUserByNameString userName allUsers
+        let userId = getUserId $ findUserByName userName allUsers
+
+        -- get user items by user id        
+        userItems <- liftIO $ getAllItemsForUser conn userId
+        let res = deleteItem conn itemName userId
+
+        let oldUserItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId userItems
+        let oldItem = Item 0 userId itemName
+        
+        allNewItems <- liftIO $ getAllItemsForUser conn userId 
+
+        let res = close conn
+
+        let newUserItemsStr = TL.pack $ itemsToStr $ findUserItemsByUserId userId allNewItems
+
+        html $ mconcat ["<h1>User Info</h1>", 
+          "<br>Searched Name: ", TL.pack userName,
+          "<br>Found: ", userStr,  "<br>",
+          "<br>Old Cart items: ", oldUserItemsStr,  "<br>",
+          "<br>New Cart items: ", newUserItemsStr,  "<br>"
+          ]          
           
       -- http://localhost:3000/updateUserEmail/?userName=user-1&newEmail=testmail
       -- Endpoint to update user email
       get "/updateUserEmail/:userName:newName" $ do
         userName <- queryParam "userName"
         newEmail <- queryParam "newEmail"
-        -- users <- updateUsers -- liftIO $ readIORef usersRef
+
+        allUsers <- liftIO $ getAllUsers conn 
+        
         let 
-          -- newEmail = "nomail" -- queryParam "newEmail"
-          user = findUserByName userName testUsers
-          userId = getUserId user -- (findUserByName userName testUsers)
+          user = findUserByName userName allUsers
+          userId = getUserId user
         let 
-          updatedUsers = updateUserEmail userId newEmail testUsers 
+          updatedUsers = updateUserEmail userId newEmail allUsers
           newUser = findUserByName userName updatedUsers
-        -- let testUsers = findUserByName userName testUsers
-        -- liftIO $ writeIORef usersRef updatedUsers
+        let res = close conn
         html $ TL.pack $ "Updated email for old user: <br>" ++ (show user) 
           ++ "<br> to new user:<br>" ++ (show newUser)
       

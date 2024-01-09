@@ -157,6 +157,7 @@ add user
 
 add item to user
 `http://localhost:3000/addItemToCart/?userName=user-db-3&itemName=test-user-db-1-item-1`
+`http://localhost:3000/addItemToCart/?userName=user-db-3&itemName=test-user-db-1-item-3`
 
 ```
 TODO
